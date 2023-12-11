@@ -5,7 +5,15 @@
  */
 
 #include <zephyr/kernel.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/usb/usb_device.h>
+#include <zephyr/usb/usbd.h>
+#include <zephyr/drivers/uart.h>
 #include <zephyr/drivers/gpio.h>
+
+
+BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
+             "Console device is not ACM CDC UART device");
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
@@ -32,12 +40,32 @@ int main(void)
 		return 0;
 	}
 
+    const struct device *const dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+    uint32_t dtr = 0;
+
+    if (usb_enable(NULL)) {
+        return 0;
+    }
+
+    /* Poll if the DTR flag was set */
+    while (!dtr) {
+        uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
+        /* Give CPU resources to low priority threads. */
+        k_sleep(K_MSEC(100));
+    }
+
+    printk("Version: 1.0\n");
+    printk("Pluto_pico CLI tool");
+    k_sleep(K_SECONDS(1));
+
+
 	while (1) {
 		ret = gpio_pin_toggle_dt(&led);
 		if (ret < 0) {
 			return 0;
 		}
-		k_msleep(SLEEP_TIME_MS);
+        printk("Hello World! %s\n", CONFIG_ARCH);
+        k_sleep(K_SECONDS(1));
 	}
 	return 0;
 }

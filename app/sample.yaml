@@ -3,7 +3,7 @@
 # so that you can easily test all of them locally or in CI.
 sample:
   description: Example application
-  name: example-application 
+  name: pluto_pico
 common:
   build_only: true
   integration_platforms:
