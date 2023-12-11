@@ -10,4 +10,6 @@ set(CONF_FILE "prj.conf")
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(app LANGUAGES C)
-target_sources(app PRIVATE src/main.c)
+# Add your source files
+FILE(GLOB app_sources src/*.c)
+target_sources(app PRIVATE ${app_sources})
