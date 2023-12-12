@@ -29,6 +29,7 @@
 #include <zephyr/drivers/uart.h>
 
 #include "inc/user_led.h"
+#include "inc/usb_cli.h"
 
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
@@ -37,7 +38,9 @@ BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 /* Stack size and thread data */
 #define STACK_SIZE 1024
 K_THREAD_STACK_DEFINE(led_stack_area, STACK_SIZE);
+K_THREAD_STACK_DEFINE(usb_cli_stack_area, STACK_SIZE);
 struct k_thread led_thread_data;
+struct k_thread usb_cli_thread_data;
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -55,23 +58,6 @@ struct k_thread led_thread_data;
  * @return int The return value is zero for successful execution and non-zero in case of error.
  */
 int main(void) {
-    const struct device *const dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
-    uint32_t dtr = 0;
-
-    if (usb_enable(NULL)) {
-        return 0;
-    }
-
-    /* Poll if the DTR flag was set */
-    while (!dtr) {
-        uart_line_ctrl_get(dev, UART_LINE_CTRL_DTR, &dtr);
-        k_sleep(K_MSEC(100));
-    }
-
-    printk("Version: 1.0\n");
-    printk("Pluto_pico CLI tool\n");
-    k_sleep(K_SECONDS(1));
-
     /* Initialize and start the LED thread */
     user_led_init();
     k_tid_t led_tid = k_thread_create(&led_thread_data, led_stack_area,
@@ -80,8 +66,15 @@ int main(void) {
                                       NULL, NULL, NULL,
                                       7, 0, K_NO_WAIT);
 
+    /* Initialize and start the USB CLI thread */
+    usb_cli_init();
+    k_tid_t usb_cli_tid = k_thread_create(&usb_cli_thread_data, usb_cli_stack_area,
+                                          K_THREAD_STACK_SIZEOF(usb_cli_stack_area),
+                                          (k_thread_entry_t) usb_cli_thread,
+                                          NULL, NULL, NULL,
+                                          7, 0, K_NO_WAIT);
+
     while (1) {
-        printk("Hello World! %s\n", CONFIG_ARCH);
         k_sleep(K_SECONDS(1));
     }
 
