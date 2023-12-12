@@ -1,4 +1,3 @@
-#include <sys/cdefs.h>
 /*
  * Copyright (c) Jannis Ruellmann 2023
  *
@@ -15,6 +14,7 @@
  * @license Apache-2.0
  */
 
+#include <sys/cdefs.h>
 #include "inc/user_led.h"
 #include <zephyr/kernel.h>
 
