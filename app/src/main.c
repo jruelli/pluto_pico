@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jannis Ruellmann 2023
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 /**
  * @file main.c
  * @brief Main entry point for the Pluto_pico project
@@ -13,6 +18,9 @@
  *
  * @note This application is designed to run on Zephyr RTOS and demonstrates basic usage of
  *       USB communication and threading with the Zephyr kernel.
+ *
+ * @author Jannis Ruellmann
+ * @license Apache-2.0
  */
 
 #include <zephyr/kernel.h>

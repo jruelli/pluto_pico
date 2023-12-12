@@ -1,9 +1,18 @@
+#include <sys/cdefs.h>
+/*
+ * Copyright (c) Jannis Ruellmann 2023
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 /**
  * @file user_led.c
  * @brief LED control module
  *
  * This module provides functions to initialize and control an LED. It includes
  * both initialization and a continuous control loop for LED state toggling.
+ *
+ * @author Jannis Ruellmann
+ * @license Apache-2.0
  */
 
 #include "inc/user_led.h"
