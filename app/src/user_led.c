@@ -46,7 +46,7 @@ void user_led_init(void) {
  * It's designed to run as a continuous thread in a Zephyr application, demonstrating
  * simple LED control.
  */
-void user_led_thread(void) {
+_Noreturn void user_led_thread(void) {
     while (1) {
         gpio_pin_toggle_dt(&led);
         k_sleep(K_MSEC(SLEEP_TIME_MS));

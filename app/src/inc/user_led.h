@@ -32,8 +32,8 @@
 
 /* Function declarations */
 void user_led_init(void);
-void user_led_thread(void);
 
-#endif //APP_USER_LED_H
+_Noreturn void user_led_thread(void);
 
+#endif // APP_USER_LED_H
 
