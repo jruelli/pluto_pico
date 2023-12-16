@@ -32,6 +32,16 @@ static bool rx_throttled;
 /* Stack size and thread data */
 #define STACK_SIZE 1024
 K_THREAD_STACK_DEFINE(led_stack_area, STACK_SIZE);
+
+static const struct device *const uart_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+#define MSG_SIZE 32
+/* receive buffer used in UART ISR callback */
+static char rx_buf[MSG_SIZE];
+static int rx_buf_pos;
+
+/* queue to store up to 10 messages (aligned to 4-byte boundary) */
+K_MSGQ_DEFINE(uart_msgq, MSG_SIZE, 10, 4);
+
 struct k_thread led_thread_data;
 
 static void interrupt_handler(const struct device *dev, void *user_data) {
@@ -40,9 +50,9 @@ static void interrupt_handler(const struct device *dev, void *user_data) {
     while (uart_irq_update(dev) && uart_irq_is_pending(dev)) {
         if (!rx_throttled && uart_irq_rx_ready(dev)) {
             int recv_len, rb_len;
-            uint8_t buffer[64];
+            uint8_t c;
             size_t len = MIN(ring_buf_space_get(&ringbuf),
-                             sizeof(buffer));
+                             sizeof(c));
 
             if (len == 0) {
                 /* Throttle because ring buffer is full */
@@ -51,19 +61,28 @@ static void interrupt_handler(const struct device *dev, void *user_data) {
                 continue;
             }
 
-            recv_len = uart_fifo_read(dev, buffer, len);
+            recv_len = uart_fifo_read(dev, &c, len);
+            if ((c == '\n' || c == '\r') && rx_buf_pos > 0) {
+                /* terminate string */
+                rx_buf[rx_buf_pos] = '\0';
+
+                /* if queue is full, message is silently dropped */
+                k_msgq_put(&uart_msgq, &rx_buf, K_NO_WAIT);
+
+                /* reset the buffer (it was copied to the msgq) */
+                rx_buf_pos = 0;
+            } else if (rx_buf_pos < (sizeof(rx_buf) - 1)) {
+                rx_buf[rx_buf_pos++] = c;
+            }
             if (recv_len < 0) {
-                printk("Failed to read UART FIFO\n");
                 LOG_ERR("Failed to read UART FIFO");
                 recv_len = 0;
             };
 
-            rb_len = ring_buf_put(&ringbuf, buffer, recv_len);
+            rb_len = ring_buf_put(&ringbuf, &c, recv_len);
             if (rb_len < recv_len) {
-                printk("Drop %u bytes\n", recv_len - rb_len);
                 LOG_ERR("Drop %u bytes", recv_len - rb_len);
             }
-            printk("tty fifo -> ringbuf %d bytes\n", rb_len);
             LOG_DBG("tty fifo -> ringbuf %d bytes", rb_len);
             if (rb_len) {
                 uart_irq_tx_enable(dev);
@@ -76,7 +95,6 @@ static void interrupt_handler(const struct device *dev, void *user_data) {
 
             rb_len = ring_buf_get(&ringbuf, buffer, sizeof(buffer));
             if (!rb_len) {
-                printk("Ring buffer empty, disable TX IRQ\n");
                 LOG_DBG("Ring buffer empty, disable TX IRQ");
                 uart_irq_tx_disable(dev);
                 continue;
@@ -89,12 +107,22 @@ static void interrupt_handler(const struct device *dev, void *user_data) {
 
             send_len = uart_fifo_fill(dev, buffer, rb_len);
             if (send_len < rb_len) {
-                printk("Drop %u bytes line 92\n", rb_len - send_len);
                 LOG_ERR("Drop %d bytes", rb_len - send_len);
             }
-            printk("ringbuf -> tty fifo %d bytes\n", send_len);
             LOG_DBG("ringbuf -> tty fifo %d bytes", send_len);
         }
+    }
+}
+
+/*
+ * Print a null-terminated string character by character to the UART interface
+ */
+void print_uart(char *buf)
+{
+    int msg_len = strlen(buf);
+
+    for (int i = 0; i < msg_len; i++) {
+        uart_poll_out(uart_dev, buf[i]);
     }
 }
 
@@ -107,6 +135,7 @@ static void interrupt_handler(const struct device *dev, void *user_data) {
 void usb_cli_init(void) {
     const struct device *const dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
     uint32_t dtr = 0;
+    char tx_buf[MSG_SIZE];
 
     if (usb_enable(NULL)) {
         return;
@@ -126,6 +155,18 @@ void usb_cli_init(void) {
     ring_buf_init(&ringbuf, sizeof(ring_buffer), ring_buffer);
     uart_irq_callback_set(dev, interrupt_handler);
     uart_irq_rx_enable(dev);
+
+    print_uart("Hello! I'm your echo bot.\r\n");
+    print_uart("Tell me something and press enter:\r\n");
+
+    /* indefinitely wait for input from the user */
+    while (k_msgq_get(&uart_msgq, &tx_buf, K_FOREVER) == 0) {
+        print_uart(tx_buf);
+        print_uart("\r\n");
+        print_uart("Echo: ");
+        print_uart(tx_buf);
+        print_uart("\r\n");
+    }
 }
 
 
