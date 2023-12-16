@@ -29,15 +29,11 @@
 #include <zephyr/drivers/uart.h>
 
 #include "inc/usb_cli.h"
+#include "inc/user_led.h"
 
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
              "Console device is not ACM CDC UART device");
-
-/* Stack size and thread data */
-#define STACK_SIZE 1024
-K_THREAD_STACK_DEFINE(usb_cli_stack_area, STACK_SIZE);
-struct k_thread usb_cli_thread_data;
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -57,10 +53,7 @@ struct k_thread usb_cli_thread_data;
 int main(void) {
     /* Initialize and start the USB CLI thread */
     usb_cli_init();
-    k_tid_t usb_cli_tid = k_thread_create(&usb_cli_thread_data, usb_cli_stack_area,
-                                          K_THREAD_STACK_SIZEOF(usb_cli_stack_area),
-                                          (k_thread_entry_t) usb_cli_thread,
-                                          NULL, NULL, NULL,
-                                          7, 0, K_NO_WAIT);
+    /* Initialize and start the user_led thread */
+    user_led_init();
     return 0;
 }

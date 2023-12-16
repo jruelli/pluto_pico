@@ -15,11 +15,12 @@
  */
 
 #include <sys/cdefs.h>
-#include "inc/user_led.h"
 #include <zephyr/kernel.h>
 
-/* LED toggle interval in milliseconds */
-#define SLEEP_TIME_MS   2000
+#include "inc/user_led.h"
+
+static struct k_thread user_led_thread_data;
+K_THREAD_STACK_DEFINE(user_led_stack_area, USER_LED_STACK_SIZE);
 
 /* LED device tree specification */
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
@@ -29,7 +30,7 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
  *
  * This function initializes the user LED specified by the LED device tree
  * specification. It configures the LED as an output and sets its initial
- * state to active.
+ * state to active. After it starts the led_tid thread.
  */
 void user_led_init(void) {
     if (!gpio_is_ready_dt(&led)) {
@@ -37,6 +38,13 @@ void user_led_init(void) {
     }
 
     gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
+
+    k_tid_t led_tid = k_thread_create(&user_led_thread_data, user_led_stack_area,
+                                      K_THREAD_STACK_SIZEOF(user_led_stack_area),
+                                      (k_thread_entry_t)user_led_thread,
+                                      NULL, NULL, NULL,
+                                      USER_LED_THREAD_PRIORITY, 0, K_NO_WAIT);
+    k_thread_start(led_tid);
 }
 
 /**
@@ -49,6 +57,6 @@ void user_led_init(void) {
 _Noreturn void user_led_thread(void) {
     while (1) {
         gpio_pin_toggle_dt(&led);
-        k_sleep(K_MSEC(SLEEP_TIME_MS));
+        k_sleep(K_MSEC(USER_LED_SLEEP_TIME_MS));
     }
 }
