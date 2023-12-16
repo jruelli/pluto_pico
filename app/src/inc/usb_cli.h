@@ -5,7 +5,7 @@
  */
 /**
  * @file usb_cli.h
- * @brief User LED control interface.
+ * @brief USB Command Line Interface (CLI) module.
  *
  * Header for usb_cli module
  *
@@ -18,8 +18,16 @@
 
 #include <zephyr/kernel.h>
 
+/** @brief Size of the ring buffer used for USB CLI data storage. */
+#define RING_BUF_SIZE 1024
+/** @brief Maximum size of a USB CLI message. */
+#define MSG_SIZE 32
+/** @brief Priority of the USB CLI thread. */
+#define USB_CLI_THREAD_PRIORITY 5
+/** @brief Stack size for the USB CLI thread. */
+#define USB_CLI_THREAD_STACK_SIZE 1024
+
 /* Function declarations */
 void usb_cli_init(void);
-_Noreturn void usb_cli_thread(void);
 
 #endif // APP_USB_CLI_H
