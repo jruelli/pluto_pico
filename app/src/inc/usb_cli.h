@@ -27,6 +27,28 @@
 /** @brief Stack size for the USB CLI thread. */
 #define USB_CLI_THREAD_STACK_SIZE 1024
 
+/** @brief Macro to convert a symbol to a string (stringify). */
+#define USB_CLI_STR(x) # x
+/** @brief Macro to expand and stringify a symbol. */
+#define USB_CLI_X_STR(x) USB_CLI_STR(x)
+
+/**
+ * @brief Structure to define a USB CLI command.
+ *
+ * This structure defines a USB CLI command, including its name, usage,
+ * description, and a handler function to execute the command.
+ */
+typedef struct {
+    /** @brief Name of the command. */
+    const char *name;
+    /** @brief Usage information for the command. */
+    const char *usage;
+    /** @brief Description of the command. */
+    const char *description;
+    /** @brief Handler function to execute the command. */
+    void (*handler)(char *args);
+} Command;
+
 /* Function declarations */
 void usb_cli_init(void);
 

@@ -20,6 +20,8 @@
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/sys/ring_buffer.h>
+#include <app_version.h>
+#include <unwind.h>
 
 #include "inc/usb_cli.h"
 
@@ -40,6 +42,26 @@ LOG_MODULE_REGISTER(usb_cli, LOG_LEVEL_INF);
 static void usb_cli_thread(void);
 static void usb_irq_cb(const struct device *dev, void *user_data);
 void print_usb(const char *buf);
+static void handle_echo(char *args);
+static void handle_version(char *args);
+
+/* Global variables*/
+static Command commands[] = {
+        { "echo",
+          "usage: echo <message> or echo --help\r\n",
+          "description: print back the provided message\r\n",
+          handle_echo
+          },
+        {
+            "version",
+            "usage: version\r\n",
+            "description: print back the version\r\n",
+            handle_version
+        }
+};
+
+// Number of commands
+#define NUM_COMMANDS (sizeof(commands) / sizeof(Command))
 
 /**
  * @brief Initialize the USB CLI interface.
@@ -57,7 +79,6 @@ void usb_cli_init(void) {
     if (usb_enable(NULL)) {
         return;
     }
-
     /* Wait for DTR signal */
     uint32_t dtr = 0;
     while (!dtr) {
@@ -71,8 +92,7 @@ void usb_cli_init(void) {
     uart_irq_rx_enable(uart_dev);
 
     /* Send initial welcome messages to USB serial interface */
-    print_usb("Hello! I'm your echo bot.\r\n");
-    print_usb("Tell me something and press enter:\r\n");
+    print_usb("Hello! I'm pluto-pico!\r\n");
 
     /* Create and start the USB CLI thread */
     k_tid_t usb_cli_tid = k_thread_create(&usb_cli_thread_data, usb_cli_thread_stack,
@@ -82,8 +102,27 @@ void usb_cli_init(void) {
 }
 
 /**
+ * @brief Find a command by name.
+ *
+ * @param name The name of the command to find.
+ * @return A pointer to the command if found, NULL otherwise.
+ */
+static Command *find_command(const char *name) {
+    for (int i = 0; i < NUM_COMMANDS; i++) {
+        if (strcmp(name, commands[i].name) == 0) {
+            return &commands[i];
+        }
+    }
+    return NULL;
+}
+
+/**
  * @brief USB CLI thread function.
  *
+ * This function handles the USB CLI interface by processing incoming messages,
+ * splitting them into commands and arguments, and executing the corresponding
+ * command handlers. If a command is recognized, it invokes the associated handler
+ * function. If the command is not recognized, it prints an error message.
  */
  static void usb_cli_thread(void) {
     char tx_buf[MSG_SIZE];
@@ -93,25 +132,64 @@ void usb_cli_init(void) {
         // Split the input message into command and arguments
         char* command = strtok(tx_buf, " "); // Assuming space as a separator
         char* args = strtok(NULL, ""); // Get the rest of the message as arguments
-
         if (command != NULL) {
-            // Check the command and execute corresponding functionality
-            if (strcmp(command, "echo") == 0) {
-                // Check if the "--help" argument is present
-                if (args != NULL && strcmp(args, "--help") == 0) {
-                    // Provide help message for the "echo" command
-                    print_usb("Usage: echo <message>\r\n");
-                    print_usb("  - Print the provided message.\r\n");
-                } else {
-                    // Execute the "echo" command
-                    print_usb(args); // Print the message
-                    print_usb("\r\n");
-                }
+            Command *cmd = find_command(command);
+            if (cmd != NULL) {
+                cmd->handler(args);
             } else {
                 // Command not recognized, provide an error message
                 print_usb("Error: Command not recognized\r\n");
             }
         }
+    }
+}
+
+/**
+ * @brief Command handler for the "echo" command.
+ *
+ * This function handles the "echo" command by printing the provided message
+ * to the USB interface. If the "--help" argument is provided, it displays
+ * usage and description information for the "echo" command.
+ *
+ * @param args The arguments provided with the "echo" command.
+ */
+static void handle_echo(char *args) {
+    Command *cmd = find_command("echo");
+    if ((args == NULL) || (strcmp(args, "--help") == 0)) {
+        // Provide help message for the "echo" command
+        print_usb(cmd->description);
+        print_usb(cmd->usage);
+    } else {
+        // Execute the "echo" command
+        print_usb(args); // Print the message
+        print_usb("\r\n");
+    }
+}
+
+/**
+ * @brief Command handler for the "version" command.
+ *
+ * This function handles the "version" command by printing the application's
+ * version and build information to the USB interface. If the "--help" argument
+ * is provided, it displays usage and description information for the "version"
+ * command.
+ *
+ * @param args The arguments provided with the "version" command.
+ */
+static void handle_version(char *args) {
+    Command *cmd = find_command("version");
+    if (strcmp(args, "--help") == 0) {
+        // Provide help message for the "echo" command
+        print_usb(cmd->description);
+        print_usb(cmd->usage);
+    } else {
+        // Execute the "version" command
+        print_usb("App Version: ");
+        print_usb(APP_VERSION_STRING);
+        print_usb("\r\n");
+        print_usb("App Build Version: ");
+        print_usb(USB_CLI_X_STR(APP_BUILD_VERSION));
+        print_usb("\r\n");
     }
 }
 
