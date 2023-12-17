@@ -8,9 +8,11 @@
  * @brief USB Command Line Interface (CLI) Module
  *
  * This module provides functions to set up and manage a USB CLI interface.
- * It handles USB communication with a host computer, including input/output
+ * It handles USB communication with a USB host, including input/output
  * processing and USB interrupts. The module allows users to interact with
- * the device via a USB serial connection.
+ * the device via a USB serial connection.\n
+ * The module is started via usb_cli_init() which will set up usb_cli_thread()
+ * that will be used to process any incoming commands.
  *
  * @author Jannis Ruellmann
  */
