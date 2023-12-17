@@ -13,7 +13,6 @@
  * the device via a USB serial connection.
  *
  * @author Jannis Ruellmann
- * @license Apache-2.0
  */
 
 #include <zephyr/sys/printk.h>
@@ -21,7 +20,6 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/sys/ring_buffer.h>
 #include <app_version.h>
-#include <unwind.h>
 
 #include "inc/usb_cli.h"
 

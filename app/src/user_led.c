@@ -11,7 +11,6 @@
  * both initialization and a continuous control loop for LED state toggling.
  *
  * @author Jannis Ruellmann
- * @license Apache-2.0
  */
 
 #include <sys/cdefs.h>

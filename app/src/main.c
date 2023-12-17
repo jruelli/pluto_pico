@@ -20,7 +20,6 @@
  *       USB communication and threading with the Zephyr kernel.
  *
  * @author Jannis Ruellmann
- * @license Apache-2.0
  */
 
 #include <zephyr/kernel.h>

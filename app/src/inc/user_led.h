@@ -10,7 +10,6 @@
  * Header for user_led module
  *
  * @author Jannis Ruellmann
- * @license Apache-2.0
  */
 
 #ifndef APP_USER_LED_H

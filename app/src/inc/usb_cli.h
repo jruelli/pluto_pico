@@ -10,7 +10,6 @@
  * Header for usb_cli module
  *
  * @author Jannis Ruellmann
- * @license Apache-2.0
  */
 
 #ifndef APP_USB_CLI_H
