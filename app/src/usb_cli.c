@@ -39,7 +39,7 @@ LOG_MODULE_REGISTER(usb_cli, LOG_LEVEL_INF);
 /* Function prototypes */
 static void usb_cli_thread(void);
 static void usb_irq_cb(const struct device *dev, void *user_data);
-void print_usb(char *buf);
+void print_usb(const char *buf);
 
 /**
  * @brief Initialize the USB CLI interface.
@@ -85,14 +85,33 @@ void usb_cli_init(void) {
  * @brief USB CLI thread function.
  *
  */
-static void usb_cli_thread(void) {
+ static void usb_cli_thread(void) {
     char tx_buf[MSG_SIZE];
     while (k_msgq_get(&uart_msgq, &tx_buf, K_FOREVER) == 0) {
         print_usb(tx_buf);
         print_usb("\r\n");
-        print_usb("echo: ");
-        print_usb(tx_buf);
-        print_usb("\r\n");
+        // Split the input message into command and arguments
+        char* command = strtok(tx_buf, " "); // Assuming space as a separator
+        char* args = strtok(NULL, ""); // Get the rest of the message as arguments
+
+        if (command != NULL) {
+            // Check the command and execute corresponding functionality
+            if (strcmp(command, "echo") == 0) {
+                // Check if the "--help" argument is present
+                if (args != NULL && strcmp(args, "--help") == 0) {
+                    // Provide help message for the "echo" command
+                    print_usb("Usage: echo <message>\r\n");
+                    print_usb("  - Print the provided message.\r\n");
+                } else {
+                    // Execute the "echo" command
+                    print_usb(args); // Print the message
+                    print_usb("\r\n");
+                }
+            } else {
+                // Command not recognized, provide an error message
+                print_usb("Error: Command not recognized\r\n");
+            }
+        }
     }
 }
 
@@ -184,7 +203,7 @@ static void usb_irq_cb(const struct device *dev, void *user_data) {
  * @brief Print a null-terminated string to UART interface
  *
  */
-void print_usb(char *buf) {
+void print_usb(const char *buf) {
     int msg_len = strlen(buf);
     for (int i = 0; i < msg_len; i++) {
         uart_poll_out(uart_dev, buf[i]);
