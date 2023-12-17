@@ -88,6 +88,9 @@ void usb_cli_init(void) {
 
     /* Send initial welcome messages to USB serial interface */
     print_usb("Hello! I'm pluto-pico!\r\n");
+    print_usb("I support the following commands:\r\n");
+    print_usb("version, echo\r\n");
+    print_usb("Use arg --help to get description for commands\r\n");
 
     /* Create and start the USB CLI thread */
     k_tid_t usb_cli_tid = k_thread_create(&usb_cli_thread_data, usb_cli_thread_stack,
