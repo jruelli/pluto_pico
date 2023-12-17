@@ -58,9 +58,6 @@ static Command commands[] = {
         }
 };
 
-// Number of commands
-#define NUM_COMMANDS (sizeof(commands) / sizeof(Command))
-
 /**
  * @brief Initialize the USB CLI interface.
  *
@@ -106,7 +103,8 @@ void usb_cli_init(void) {
  * @return A pointer to the command if found, NULL otherwise.
  */
 static Command *find_command(const char *name) {
-    for (int i = 0; i < NUM_COMMANDS; i++) {
+    size_t numberOfCommands = sizeof(commands) / sizeof(Command);
+    for (size_t i = 0; i < numberOfCommands; i++) {
         if (strcmp(name, commands[i].name) == 0) {
             return &commands[i];
         }
