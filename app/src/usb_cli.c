@@ -52,7 +52,7 @@ static Command commands[] = {
           },
         {
             "version",
-            "usage: version\r\n",
+            "usage: version or version --build-ver\r\n",
             "description: print back the version\r\n",
             handle_version
         }
@@ -178,14 +178,20 @@ static void handle_version(char *args) {
         // Provide help message for the "echo" command
         print_usb(cmd->description);
         print_usb(cmd->usage);
-    } else {
-        // Execute the "version" command
-        print_usb("App Version: ");
-        print_usb(APP_VERSION_STRING);
-        print_usb("\r\n");
+    } else if (strcmp(args, "--build-ver") == 0) {
         print_usb("App Build Version: ");
         print_usb(USB_CLI_X_STR(APP_BUILD_VERSION));
         print_usb("\r\n");
+    } else if (args == NULL) {
+        print_usb("App Version: ");
+        print_usb(APP_VERSION_STRING);
+        print_usb("\r\n");
+    }
+    else {
+        // Execute the "version" command
+        print_usb("Unknown parameter: ");
+        print_usb("\r\n");
+
     }
 }
 
