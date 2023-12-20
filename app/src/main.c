@@ -29,6 +29,7 @@
 
 #include "inc/usb_cli.h"
 #include "inc/user_led.h"
+#include "inc/tb6612fng.h"
 
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
@@ -54,5 +55,8 @@ int main(void) {
     usb_cli_init();
     /* Initialize and start the user_led thread */
     user_led_init();
+    /* Test motor*/
+    motor_t *motor_a = NULL;
+    motor_a_init(motor_a);
     return 0;
 }
