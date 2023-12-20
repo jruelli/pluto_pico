@@ -1,0 +1,18 @@
+#include <sys/cdefs.h>
+#include <zephyr/drivers/pwm.h>
+#include <zephyr/drivers/gpio.h>
+#include <devicetree_generated.h>
+
+
+// GPIO and PWM specifications from device tree
+#define MOTOR_A_IN_1	DT_ALIAS(motorain1)
+#define MOTOR_A_IN_2	DT_ALIAS(motorain2)
+#define MOTOR_B_IN_1	DT_ALIAS(motorbin1)
+#define MOTOR_B_IN_2	DT_ALIAS(motorbin2)
+#define MOTOR_STANDBY	DT_ALIAS(stdby)
+
+static const struct gpio_dt_spec motor_a_in1   = GPIO_DT_SPEC_GET_OR(MOTOR_A_IN_1, gpios,{0});
+static const struct gpio_dt_spec motor_a_in2   = GPIO_DT_SPEC_GET_OR(MOTOR_A_IN_2, gpios,{0});
+static const struct gpio_dt_spec motor_b_in1   = GPIO_DT_SPEC_GET_OR(MOTOR_B_IN_1, gpios,{0});
+static const struct gpio_dt_spec motor_b_in2   = GPIO_DT_SPEC_GET_OR(MOTOR_B_IN_2, gpios,{0});
+static const struct gpio_dt_spec motor_standby = GPIO_DT_SPEC_GET_OR(MOTOR_STANDBY, gpios,{0});
