@@ -15,36 +15,61 @@
         compatible = "zephyr,cdc-acm-uart";
     };
 };
+
 / {
     gpio_keys {
         compatible = "gpio-keys";
-        ain1: a_in1 {
-            label = "motor_a_in1";
-            gpios = <&gpio0 16 GPIO_ACTIVE_HIGH>;
+        relay1: relay_1 {
+            label = "relay_1";
+            gpios = <&gpio0 9 GPIO_ACTIVE_HIGH>;
         };
-        ain2: a_in2 {
-            label = "motor_a_in2";
-            gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>;
+        relay2: relay_2 {
+            label = "relay_2";
+            gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
         };
-        bin1: b_in1 {
-            label = "motor_b_in1";
-            gpios = <&gpio0 30 GPIO_ACTIVE_HIGH>;
+        relay3: relay_3 {
+            label = "relay_3";
+            gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
         };
-        bin2: b_in2 {
-            label = "motor_b_in2";
-            gpios = <&gpio0 31 GPIO_ACTIVE_HIGH>;
+        relay4: relay_4 {
+            label = "relay_4";
+            gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
         };
-        stdby: stdby {
-            label = "standby";
-            gpios = <&gpio0 32 GPIO_ACTIVE_HIGH>;
+        relay5: relay_5 {
+            label = "relay_5";
+            gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
+        };
+        relay6: relay_6 {
+            label = "relay_6";
+            gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
+        };
+        relay7: relay_7 {
+            label = "relay_7";
+            gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>;
+        };
+        relay8: relay_8 {
+            label = "relay_8";
+            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
         };
     };
 
     aliases {
-        motorain1 = &ain1;
-        motorain2 = &ain2;
-        motorbin1 = &bin1;
-        motorbin2 = &bin2;
-        stdby = &stdby;
+        relay1 = &relay1;
+        relay2 = &relay2;
+        relay3 = &relay3;
+        relay4 = &relay4;
+        relay5 = &relay5;
+        relay6 = &relay6;
+        relay7 = &relay7;
+        relay8 = &relay8;
     };
+};
+
+&pwm {
+    status = "okay";
+    /* Define the PWM channels for motor A and B */
+    //pwm_motor_a: pwm_motor_a {
+    //    label = "PWM_MOTOR_A";
+    //    ch0-pin = <15>; /* PWM pin for motor A */
+    //};
 };
