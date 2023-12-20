@@ -28,7 +28,17 @@ void relay_init() {
     gpio_pin_configure_dt(&relay_6, GPIO_OUTPUT);
     gpio_pin_configure_dt(&relay_7, GPIO_OUTPUT);
     gpio_pin_configure_dt(&relay_8, GPIO_OUTPUT);
-    printk("All relays configured!\n");
+
+    // Set all relays to OFF (active low, so set to high)
+    gpio_pin_set(relay_1.port, relay_1.pin, 1);
+    gpio_pin_set(relay_2.port, relay_2.pin, 1);
+    gpio_pin_set(relay_3.port, relay_3.pin, 1);
+    gpio_pin_set(relay_4.port, relay_4.pin, 1);
+    gpio_pin_set(relay_5.port, relay_5.pin, 1);
+    gpio_pin_set(relay_6.port, relay_6.pin, 1);
+    gpio_pin_set(relay_7.port, relay_7.pin, 1);
+    gpio_pin_set(relay_8.port, relay_8.pin, 1);
+    printk("All relays configured and set to OFF!\n");
 }
 
 void control_relays(uint8_t value) {

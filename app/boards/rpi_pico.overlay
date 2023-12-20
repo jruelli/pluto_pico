@@ -21,35 +21,35 @@
         compatible = "gpio-keys";
         relay1: relay_1 {
             label = "relay_1";
-            gpios = <&gpio0 9 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
         };
         relay2: relay_2 {
             label = "relay_2";
-            gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
         };
         relay3: relay_3 {
             label = "relay_3";
-            gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpio0 7 GPIO_ACTIVE_LOW>;
         };
         relay4: relay_4 {
             label = "relay_4";
-            gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpio0 6 GPIO_ACTIVE_LOW>;
         };
         relay5: relay_5 {
             label = "relay_5";
-            gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpio0 5 GPIO_ACTIVE_LOW>;
         };
         relay6: relay_6 {
             label = "relay_6";
-            gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpio0 4 GPIO_ACTIVE_LOW>;
         };
         relay7: relay_7 {
             label = "relay_7";
-            gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpio0 3 GPIO_ACTIVE_LOW>;
         };
         relay8: relay_8 {
             label = "relay_8";
-            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+            gpios = <&gpio0 2 GPIO_ACTIVE_LOW>;
         };
     };
 

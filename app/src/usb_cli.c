@@ -24,6 +24,7 @@
 #include <app_version.h>
 
 #include "inc/usb_cli.h"
+#include "inc/relays.h"
 
 /* Define global variables */
 static const struct device *uart_dev;
@@ -44,6 +45,8 @@ static void usb_irq_cb(const struct device *dev, void *user_data);
 void print_usb(const char *buf);
 static void handle_echo(char *args);
 static void handle_version(char *args);
+static void handle_relays(char *args);
+uint8_t simple_strtou8(const char *str);
 
 /* Global variables*/
 static Command commands[] = {
@@ -57,6 +60,12 @@ static Command commands[] = {
             "usage: version or version --build-ver\r\n",
             "description: print back the version\r\n",
             handle_version
+        },
+        {
+                "relays",
+                "usage: relays --bin-value <X> | --relay-name <X> <state> | --get-relay-names | --help\r\n",
+                "description: Control or query relays\r\n",
+                handle_relays
         }
 };
 
@@ -195,6 +204,55 @@ static void handle_version(char *args) {
         print_usb("\r\n");
 
     }
+}
+
+static void handle_relays(char *args) {
+    if (args == NULL || strcmp(args, "--help") == 0) {
+        Command *cmd = find_command("relays");
+        print_usb(cmd->description);
+        print_usb(cmd->usage);
+        return;
+    }
+
+    char *arg = strtok(args, " ");
+    while (arg != NULL) {
+        if (strcmp(arg, "--bin-value") == 0) {
+            printk("I am in --bin-value");
+            arg = strtok(NULL, " ");
+            if (arg != NULL) {
+                printk("I am in --bin-value and my arg is: %s", arg);
+                uint8_t value = simple_strtou8(arg);
+                control_relays(value);
+            }
+        } else if (strcmp(arg, "--relay-name") == 0) {
+            printk("I am in --relay-name");
+            char *name = strtok(NULL, " ");
+            char *state = strtok(NULL, " ");
+            printk("%s\n", name);
+            printk("%s\n", state);
+            if (name != NULL && state != NULL) {
+                bool state_val = (bool)simple_strtou8(state);
+                control_relay_by_name(name, state_val);
+            }
+        } else if (strcmp(arg, "--get-relay-names") == 0) {
+            printk("My arg is: %s", arg);
+            for (int i = 1; i <= 8; i++) {
+                print_usb(get_relay_name(i));
+                print_usb("\r\n");
+            }
+        }
+        arg = strtok(NULL, " ");
+    }
+}
+
+uint8_t simple_strtou8(const char *str) {
+    uint8_t result = 0;
+    while (*str) {
+        if (*str < '0' || *str > '9') break; // Not a digit
+        result = result * 10 + (*str - '0');
+        str++;
+    }
+    return result;
 }
 
 /**

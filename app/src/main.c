@@ -22,14 +22,12 @@
  * @author Jannis Ruellmann
  */
 
-#include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
-#include <zephyr/usb/usb_device.h>
 #include <zephyr/drivers/uart.h>
 
 #include "inc/usb_cli.h"
 #include "inc/user_led.h"
-#include "inc/tb6612fng.h"
+#include "inc/relays.h"
 
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
@@ -56,7 +54,6 @@ int main(void) {
     /* Initialize and start the user_led thread */
     user_led_init();
     /* Test motor*/
-    motor_t *motor_a = NULL;
-    motor_a_init(motor_a);
+    relay_init();
     return 0;
 }
