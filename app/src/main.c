@@ -28,6 +28,7 @@
 #include "inc/usb_cli.h"
 #include "inc/user_led.h"
 #include "inc/relays.h"
+#include "inc/adafruit_ms_v2.h"
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -49,7 +50,9 @@ int main(void) {
     usb_cli_init();
     /* Initialize and start the user_led thread */
     user_led_init();
-    /* Test motor*/
+    /* Init relays*/
     relay_init();
+    /* test adafruit_ms_v2*/
+    adafruit_ms_v2_init();
     return 0;
 }
