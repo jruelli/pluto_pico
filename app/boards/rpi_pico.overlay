@@ -6,7 +6,7 @@
 
 / {
     chosen {
-        zephyr,console = &cdc_acm_uart0;
+        zephyr,shell-uart = &cdc_acm_uart0;
     };
 };
 
@@ -63,13 +63,4 @@
         relay7 = &relay7;
         relay8 = &relay8;
     };
-};
-
-&pwm {
-    status = "okay";
-    /* Define the PWM channels for motor A and B */
-    //pwm_motor_a: pwm_motor_a {
-    //    label = "PWM_MOTOR_A";
-    //    ch0-pin = <15>; /* PWM pin for motor A */
-    //};
 };
