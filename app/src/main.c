@@ -29,10 +29,6 @@
 #include "inc/user_led.h"
 #include "inc/relays.h"
 
-
-BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
-             "Console device is not ACM CDC UART device");
-
 /**
  * @brief Entry point for the Pluto_pico application.
  *
