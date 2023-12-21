@@ -213,33 +213,28 @@ static void handle_relays(char *args) {
         print_usb(cmd->usage);
         return;
     }
-
     char *arg = strtok(args, " ");
     while (arg != NULL) {
         if (strcmp(arg, "--bin-value") == 0) {
-            printk("I am in --bin-value");
             arg = strtok(NULL, " ");
             if (arg != NULL) {
-                printk("I am in --bin-value and my arg is: %s", arg);
                 uint8_t value = simple_strtou8(arg);
                 control_relays(value);
             }
         } else if (strcmp(arg, "--relay-name") == 0) {
-            printk("I am in --relay-name");
             char *name = strtok(NULL, " ");
             char *state = strtok(NULL, " ");
-            printk("%s\n", name);
-            printk("%s\n", state);
             if (name != NULL && state != NULL) {
                 bool state_val = (bool)simple_strtou8(state);
                 control_relay_by_name(name, state_val);
             }
         } else if (strcmp(arg, "--get-relay-names") == 0) {
-            printk("My arg is: %s", arg);
-            for (int i = 1; i <= 8; i++) {
+            for (int i = 0; i <= 7; i++) {
                 print_usb(get_relay_name(i));
                 print_usb("\r\n");
             }
+        } else {
+            print_usb("unknown argument\r\n");
         }
         arg = strtok(NULL, " ");
     }
@@ -248,7 +243,10 @@ static void handle_relays(char *args) {
 uint8_t simple_strtou8(const char *str) {
     uint8_t result = 0;
     while (*str) {
-        if (*str < '0' || *str > '9') break; // Not a digit
+        if (*str < '0' || *str > '9') {
+            print_usb("not a digit.\r\n");
+            break;
+        }
         result = result * 10 + (*str - '0');
         str++;
     }
