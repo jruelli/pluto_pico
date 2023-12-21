@@ -17,8 +17,9 @@
 
 // Function declarations
 void relay_init();
-void control_relays(uint8_t value);
-void control_relay_by_name(const char *name, bool state);
+void set_relays(uint8_t value);
+void set_relay_by_name(const char *name, bool state);
+bool get_relay_by_name(const char *name);
 const char* get_relay_name(int relay_number);
 
 #endif // TB6612FNG_H

@@ -1,5 +1,3 @@
-#include <sys/cdefs.h>
-#include <zephyr/drivers/pwm.h>
 #include <zephyr/drivers/gpio.h>
 #include <devicetree_generated.h>
 #include <zephyr/sys/printk.h>
@@ -41,7 +39,7 @@ void relay_init() {
     printk("All relays configured and set to OFF!\n");
 }
 
-void control_relays(uint8_t value) {
+void set_relays(uint8_t value) {
     gpio_pin_set(relay_0.port, relay_0.pin, value & 0x01);
     gpio_pin_set(relay_1.port, relay_1.pin, (value >> 1) & 0x01);
     gpio_pin_set(relay_2.port, relay_2.pin, (value >> 2) & 0x01);
@@ -52,7 +50,7 @@ void control_relays(uint8_t value) {
     gpio_pin_set(relay_7.port, relay_7.pin, (value >> 7) & 0x01);
 }
 
-void control_relay_by_name(const char *name, bool state) {
+void set_relay_by_name(const char *name, bool state) {
     if (strcmp(name, "relay_0") == 0) {
         gpio_pin_set(relay_0.port, relay_0.pin, state);
     } else if (strcmp(name, "relay_1") == 0) {
@@ -71,6 +69,29 @@ void control_relay_by_name(const char *name, bool state) {
         gpio_pin_set(relay_7.port, relay_7.pin, state);
     }
 }
+
+bool get_relay_by_name(const char *name) {
+    bool state = false;
+    if (strcmp(name, "relay_0") == 0) {
+        state = gpio_pin_get(relay_0.port, relay_0.pin);
+    } else if (strcmp(name, "relay_1") == 0) {
+        state = gpio_pin_get(relay_1.port, relay_1.pin);
+    } else if (strcmp(name, "relay_2") == 0) {
+        state = gpio_pin_get(relay_2.port, relay_2.pin);
+    } else if (strcmp(name, "relay_3") == 0) {
+        state = gpio_pin_get(relay_3.port, relay_3.pin);
+    } else if (strcmp(name, "relay_4") == 0) {
+        state = gpio_pin_get(relay_4.port, relay_4.pin);
+    } else if (strcmp(name, "relay_5") == 0) {
+        state = gpio_pin_get(relay_5.port, relay_5.pin);
+    } else if (strcmp(name, "relay_6") == 0) {
+        state = gpio_pin_get(relay_6.port, relay_6.pin);
+    } else if (strcmp(name, "relay_7") == 0) {
+        state = gpio_pin_get(relay_7.port, relay_7.pin);
+    }
+    return state;
+}
+
 
 const char* get_relay_name(int relay_number) {
     switch (relay_number) {

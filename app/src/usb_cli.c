@@ -55,6 +55,7 @@ static int cmd_version(const struct shell *shell, size_t argc, char **argv) {
 static int cmd_relays(const struct shell *shell, size_t argc, char **argv) {
     if (argc == 1) {
         shell_print(shell, "Usage: relays --set-bytes <value[0..255]> "
+                           "| --get-relay <name> "
                            "| --set-relay <name> <state[1/0]> "
                            "| --list-relays");
         return 0;
@@ -62,7 +63,7 @@ static int cmd_relays(const struct shell *shell, size_t argc, char **argv) {
     if (strcmp(argv[1], "--set-bytes") == 0) {
         if (argc == 3) {
             uint8_t value = simple_strtou8(argv[2]);
-            control_relays(value);
+            set_relays(value);
         } else {
             shell_print(shell, "Invalid number of arguments for --bin-value");
         }
@@ -70,7 +71,15 @@ static int cmd_relays(const struct shell *shell, size_t argc, char **argv) {
         if (argc == 4) {
             const char *name = argv[2];
             bool state_val = simple_strtou8(argv[3]) != 0; // Convert to boolean
-            control_relay_by_name(name, state_val);
+            set_relay_by_name(name, state_val);
+        } else {
+            shell_print(shell, "Invalid number of arguments for -w");
+        }
+    } else if (strcmp(argv[1], "--get-relay") == 0) {
+        if (argc == 3) {
+            const char *name = argv[2];
+            bool state = get_relay_by_name(name);
+            shell_print(shell, "%s state: %d", name, state);
         } else {
             shell_print(shell, "Invalid number of arguments for -w");
         }
