@@ -1,5 +1,19 @@
-#ifndef TB6612FNG_H
-#define TB6612FNG_H
+/*
+ * Copyright (c) Jannis Ruellmann 2023
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @file relays.h
+ * @brief Relays module.
+ *
+ * Header for relays module
+ *
+ * @author Jannis Ruellmann
+ */
+
+#ifndef APP_RELAYS_H
+#define APP_RELAYS_H
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
@@ -18,4 +32,4 @@
 // Function declarations
 void relay_init();
 
-#endif // TB6612FNG_H
+#endif // APP_RELAYS_H
