@@ -92,6 +92,32 @@ static int cmd_version(const struct shell *shell, size_t argc, char **argv) {
 }
 
 /**
+ * @brief Convert a string to an unsigned 8-bit integer.
+ *
+ * This function parses a string and converts it into an 8-bit unsigned integer.
+ * It processes characters until a non-digit is encountered or the end of the
+ * string is reached. This function is used for simple string-to-number conversion
+ * without external dependencies.
+ *
+ * **Usage**\n
+ *     uint8_t num = simple_strtou8("123"); // Converts "123" to 123\n
+ *
+ * @param str Pointer to the null-terminated string to be converted.
+ * @return The converted 8-bit unsigned integer value.
+ */
+uint8_t simple_strtou8(const char *str) {
+    uint8_t result = 0;
+    while (*str) {
+        if (*str < '0' || *str > '9') {
+            break;
+        }
+        result = result * 10 + (*str - '0');
+        str++;
+    }
+    return result;
+}
+
+/**
  * @brief Initialize the USB CLI interface.
  *
  * This function sets up the USB CLI interface. It enables the USB subsystem,

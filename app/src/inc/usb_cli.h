@@ -24,5 +24,6 @@
 
 /* Function declarations */
 void usb_cli_init(void);
+uint8_t simple_strtou8(const char *str);
 
 #endif // APP_USB_CLI_H
