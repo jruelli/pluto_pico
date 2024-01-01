@@ -29,6 +29,7 @@
 #include "inc/user_led.h"
 #include "inc/relays.h"
 #include "inc/adafruit_ms_v2.h"
+#include "inc/motordriver.h"
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -54,5 +55,7 @@ int main(void) {
     relay_init();
     /* test adafruit_ms_v2*/
     adafruit_ms_v2_init();
+    /* Init motordriver*/
+    motordriver_init();
     return 0;
 }
