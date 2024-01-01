@@ -22,13 +22,9 @@
  * @author Jannis Ruellmann
  */
 
-#include <zephyr/sys/printk.h>
-#include <zephyr/drivers/uart.h>
-
 #include "inc/usb_cli.h"
 #include "inc/user_led.h"
 #include "inc/relays.h"
-#include "inc/adafruit_ms_v2.h"
 #include "inc/motordriver.h"
 
 /**
@@ -53,8 +49,6 @@ int main(void) {
     user_led_init();
     /* Init relays*/
     relay_init();
-    /* test adafruit_ms_v2*/
-    adafruit_ms_v2_init();
     /* Init motordriver*/
     motordriver_init();
     return 0;
