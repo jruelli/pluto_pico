@@ -21,6 +21,7 @@
 #define PWM_1   DT_ALIAS(pwm1)
 #define PWM_2   DT_ALIAS(pwm2)
 
+/** @brief Delay before performing initial speed adjustment. */
 #define ADJUST_SPEED_DELAY_MS 5
 
 typedef struct {

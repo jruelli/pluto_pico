@@ -47,9 +47,9 @@ int main(void) {
     usb_cli_init();
     /* Initialize and start the user_led thread */
     user_led_init();
-    /* Init relays*/
+    /* Init relays */
     relay_init();
-    /* Init motordriver*/
+    /* Init motordriver */
     motordriver_init();
     return 0;
 }

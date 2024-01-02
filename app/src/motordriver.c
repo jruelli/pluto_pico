@@ -1,9 +1,37 @@
-#include <sys/cdefs.h>
 /*
  * Copyright (c) Jannis Ruellmann 2023
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+/**
+ * @file motordriver.c
+ * @brief Motor Control Module
+ *
+ * This module provides a set of functions for controlling and querying the state
+ * of motor drivers in an embedded system. It includes capabilities to set the speed
+ * and direction of individual motors, retrieve the current state of motors, and
+ * interact with the motor control system through a command-line interface.
+ * The functions make use of PWM (Pulse Width Modulation) and GPIO (General-Purpose Input/Output)
+ * pins to manage motor control.
+ *
+ * This module facilitates the integration of motor control into larger systems,
+ * allowing for effective management of mechanical movements and automation tasks.
+ * It is designed to be easy to use and integrate into various embedded systems
+ * requiring motor control functionality.
+ *
+ * Key functionalities include:
+ * - Setting the speed and direction of motors.
+ * - Querying the state of motors.
+ * - Command-line interface for motor control.
+ * - Initialization and configuration of motor control hardware.
+ *
+ * The module is a part of a larger system and can be utilized in applications such
+ * as robotics, automation, and other scenarios where precise motor control is essential.
+ *
+ * @author Jannis Ruellmann
+ */
+
+#include <sys/cdefs.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/pwm.h>
 #include <zephyr/sys/printk.h>
@@ -14,10 +42,9 @@
 #include "inc/motordriver.h"
 #include "inc/usb_cli.h"
 
+// Function declarations
 void init_motor(motor_t* motor);
 void set_speed(motor_t* motor, uint32_t speed_percent);
-
-// Function declarations
 void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id);
 
 static const struct pwm_dt_spec pwm_1 = PWM_DT_SPEC_GET_OR(PWM_1, {0});
@@ -67,6 +94,30 @@ motor_t motor2 = {
         .timer = &motor2_timer,
 };
 
+/**
+ * @brief Shell command function to control and query motor1.
+ *
+ * This function is designed to be used as a shell command for controlling
+ * and querying the state of motor1. It supports multiple sub-commands for
+ * setting motor direction, speed, and querying motor status.
+ *
+ * **Usage**\n
+ *     motor1 set-dir <0/1>                 // Sets the direction of motor\n
+ *     motor1 set-speed <0-100>             // Sets the speed of motor (0..100)\n
+ *     motor1 Zset-speed <0-100> (unsafe)   // UNSAFE Directly sets the PWM speed of motor (0..100)\n
+ *     motor1 get-speed                     // Gets the current speed of motor\n
+ *     motor1 get-dir                       // Gets the current direction of motor\n
+ *     motor1 get-motor                     // Gets the current configuration of motor\n
+ *     motor1 config-acc-rate <0-100>       // Configures the acceleration rate (1..99)\n
+ *     motor1 config-brak-rate <0-100>      // Configures the braking rate (1..99)\n
+ *     motor1 config-acc-rate-delay <ms>    // Configures the acceleration rate delay (1..0xFF)\n
+ *     motor1 config-brak-rate-delay <ms>   // Configures the braking rate delay (1..0xFF)\n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ * @return Returns 0 on success, or an error code on failure.
+ */
 static int cmd_motor1(const struct shell *shell, size_t argc, char **argv) {
     if (argc > 1) {
         if (strcmp(argv[1], "set-dir") == 0) {
@@ -129,6 +180,30 @@ static int cmd_motor1(const struct shell *shell, size_t argc, char **argv) {
     return 0;
 }
 
+/**
+ * @brief Shell command function to control and query motor2.
+ *
+ * This function is designed to be used as a shell command for controlling
+ * and querying the state of motor1. It supports multiple sub-commands for
+ * setting motor direction, speed, and querying motor status.
+ *
+ * **Usage**\n
+ *     motor2 set-dir <0/1>                 // Sets the direction of motor\n
+ *     motor2 set-speed <0-100>             // Sets the speed of motor (0..100)\n
+ *     motor2 Zset-speed <0-100> (unsafe)   // UNSAFE Directly sets the PWM speed of motor (0..100)\n
+ *     motor2 get-speed                     // Gets the current speed of motor\n
+ *     motor2 get-dir                       // Gets the current direction of motor\n
+ *     motor2 get-motor                     // Gets the current configuration of motor\n
+ *     motor2 config-acc-rate <0-100>       // Configures the acceleration rate (1..99)\n
+ *     motor2 config-brak-rate <0-100>      // Configures the braking rate (1..99)\n
+ *     motor2 config-acc-rate-delay <ms>    // Configures the acceleration rate delay (1..0xFF)\n
+ *     motor2 config-brak-rate-delay <ms>   // Configures the braking rate delay (1..0xFF)\n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ * @return Returns 0 on success, or an error code on failure.
+ */
 static int cmd_motor2(const struct shell *shell, size_t argc, char **argv) {
     if (argc > 1) {
         if (strcmp(argv[1], "set-dir") == 0) {
@@ -191,6 +266,21 @@ static int cmd_motor2(const struct shell *shell, size_t argc, char **argv) {
     return 0;
 }
 
+/**
+ * @brief Sets the direction of a motor.
+ *
+ * Sets the direction of the specified motor. It stops the motor (if moving) before
+ * setting the new direction. The function locks the motor's mutex to ensure thread safety.
+ *
+ * **Usage**
+ * ```
+ * motor_t motor; // Assume this is initialized
+ * motordriver_set_dir(&motor, true); // Set direction to true/1
+ * ```
+ *
+ * @param motor Pointer to the motor structure whose direction is to be set.
+ * @param dir The new direction for the motor (true for one direction, false for the opposite).
+ */
 void motordriver_set_dir(motor_t* motor, bool dir) {
     // Set the direction of the motor
     k_mutex_lock(motor->mutex, K_FOREVER);
@@ -206,11 +296,16 @@ void motordriver_set_dir(motor_t* motor, bool dir) {
 }
 
 /**
- * @brief Set the speed of the motor.
+ * @brief Sets the speed of the motor.
  *
- * This function sets the speed of the motor by adjusting the PWM duty cycle.
- * The speed is set as a percentage of the maximum speed, where 0% is stopped
- * and 100% is full speed.
+ * Sets the speed of the motor by adjusting the PWM duty cycle. Speed is represented
+ * as a percentage of the maximum speed.
+ *
+ * **Usage**
+ * ```
+ * motor_t motor; // Assume this is initialized
+ * set_speed(&motor, 50); // Set speed to 50%
+ * ```
  *
  * @param motor Pointer to the motor structure.
  * @param speed_percent The speed of the motor as a percentage (0-100).
@@ -237,6 +332,20 @@ void set_speed(motor_t* motor, uint32_t speed_percent) {
     k_mutex_unlock(motor->mutex);
 }
 
+/**
+ * @brief Initializes a motor.
+ *
+ * Initializes a motor by setting up GPIO and PWM, and initializing the mutex and timer.
+ * It also sets the initial direction and speed to OFF.
+ *
+ * **Usage**
+ * ```
+ * motor_t motor; // Declare a motor
+ * init_motor(&motor); // Initialize the motor
+ * ```
+ *
+ * @param motor Pointer to the motor structure to be initialized.
+ */
 void init_motor(motor_t* motor) {
     if (!device_is_ready(motor->pwm_spec.dev)) {
         printk("%s Error: PWM not ready.\n", motor->name);
@@ -256,11 +365,21 @@ void init_motor(motor_t* motor) {
 }
 
 /**
- * @brief Gradually adjusts the speed of the motor.
+ * @brief Gradually adjusts the motor speed in a blocking manner.
+ *
+ * This function adjusts the speed of the motor to the target speed in a blocking
+ * manner, meaning it will not return until the target speed is reached. It
+ * incrementally increases or decreases the speed based on the current and target
+ * values, handling both acceleration and braking.
+ *
+ * **Usage**
+ * ```
+ * motor_t motor; // Assume this is initialized
+ * motordriver_adjust_motor_speed_blocking(&motor, 50); // Set target speed to 50%
+ * ```
  *
  * @param motor Pointer to the motor structure.
  * @param target_speed The target speed as a percentage (0-100).
- * @param rate The rate of speed change (acceleration or braking).
  */
 void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed) {
     if (motor->acceleration_rate == 0) {
@@ -289,6 +408,18 @@ void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_spe
     printk("%s target speed: %d reached.\n", motor->name, motor->speed);
 }
 
+/**
+ * @brief Timer expiry function for motor speed adjustment.
+ *
+ * Invoked when the motor's timer expires. It adjusts the motor speed towards the
+ * target speed, either by accelerating or braking, based on the current and target
+ * speeds. This function is usually used in conjunction with non-blocking speed adjustment.
+ *
+ * **Usage**
+ * Typically called internally by a timer and not directly used in application code.
+ *
+ * @param timer_id Pointer to the expired timer.
+ */
 void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id) {
     motor_t *motor = k_timer_user_data_get(timer_id);
     k_mutex_lock(motor->mutex, K_FOREVER);
@@ -320,11 +451,20 @@ void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id) {
 }
 
 /**
- * @brief Gradually adjusts the speed of the motor in a nonblocking mode.
+ * @brief Gradually adjusts the motor speed in a non-blocking manner.
+ *
+ * Starts or restarts a timer to adjust the motor speed towards the target speed.
+ * The actual speed adjustment is performed in the timer callback function. This
+ * function allows other operations to continue while the motor speed is being adjusted.
+ *
+ * **Usage**
+ * ```
+ * motor_t motor; // Assume this is initialized
+ * motordriver_adjust_motor_speed_non_blocking(&motor, 75); // Adjust speed to 75%
+ * ```
  *
  * @param motor Pointer to the motor structure.
  * @param target_speed The target speed as a percentage (0-100).
- * @param rate The rate of speed change (acceleration or braking).
  */
 void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed) {
     if (motor->acceleration_rate == 0 || motor->braking_rate == 0) {
@@ -343,23 +483,55 @@ void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target
 }
 
 /**
- * @brief Initialize the motordriver module.
+ * @brief Initializes the motor driver module.
  *
- * This function sets up the GPIO pins connected to the motordriver.
+ * Sets up the motors and their associated hardware, preparing them for operation.
+ * This includes initializing the motors, setting up GPIO and PWM, and ensuring
+ * the motors are in a known state.
  *
+ * **Usage**
+ * ```
+ * motordriver_init(); // Initialize both motors
+ * ```
  */
 void motordriver_init() {
     init_motor(&motor1);
     init_motor(&motor2);
 }
 
+/**
+ * @brief Retrieves the current state of motor1.
+ *
+ * Provides the current state of motor1, including its direction, speed, and other
+ * configuration parameters.
+ *
+ * **Usage**
+ * ```
+ * motor_t motorState = motordriver_get_motor1(); // Get current state of motor1
+ * ```
+ *
+ * @return The motor1 structure with its current state.
+ */
 motor_t motordriver_get_motor1() {
     return motor1;
 }
 
+/**
+ * @brief Retrieves the current state of motor2.
+ *
+ * Similar to `motordriver_get_motor1`, provides the current state of motor2.
+ *
+ * **Usage**
+ * ```
+ * motor_t motorState = motordriver_get_motor2(); // Get current state of motor2
+ * ```
+ *
+ * @return The motor2 structure with its current state.
+ */
 motor_t motordriver_get_motor2() {
     return motor2;
 }
+
 SHELL_CMD_REGISTER(motor1, NULL,
                    "control motordriver of pico-pluto. Execute without arguments to get more info",
                    cmd_motor1);
