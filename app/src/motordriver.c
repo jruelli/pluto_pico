@@ -46,6 +46,7 @@
 void init_motor(motor_t* motor);
 void set_speed(motor_t* motor, uint32_t speed_percent);
 void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id);
+void set_motors(motor_t *motor1, motor_t *motor2, uint32_t speed1, uint32_t speed2, bool dir1, bool dir2);
 
 static const struct pwm_dt_spec pwm_1 = PWM_DT_SPEC_GET_OR(PWM_1, {0});
 static const struct pwm_dt_spec pwm_2 = PWM_DT_SPEC_GET_OR(PWM_2, {0});
@@ -267,6 +268,48 @@ static int cmd_motor2(const struct shell *shell, size_t argc, char **argv) {
 }
 
 /**
+ * @brief Shell command function to control both motors simultaneously.
+ *
+ * This function allows for simultaneous control of two motors, including setting
+ * their speeds and directions. It's useful for coordinated movements of a dual-motor
+ * system like a robot with chain tracks.
+ *
+ * **Usage**\n
+ *     motors set <speed_motor1> <dir_motor1> <speed_motor2> <dir_motor2>\n
+ *        - Sets the speed (0-100) and direction (0/1) for both motors.\n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ * @return Returns 0 on success, or an error code on failure.
+ */
+static int cmd_motors(const struct shell *shell, size_t argc, char **argv) {
+    if (argc < 5) {
+        shell_print(shell, "Usage: motors set <speed_motor1> <dir_motor1> <speed_motor2> <dir_motor2>");
+        return 0;
+    }
+
+    if (strcmp(argv[1], "set") == 0) {
+        uint32_t speed_motor1 = simple_strtou32(argv[2]);
+        bool dir_motor1 = simple_strtou32(argv[3]) != 0;
+        uint32_t speed_motor2 = simple_strtou32(argv[4]);
+        bool dir_motor2 = simple_strtou32(argv[5]) != 0;
+
+        // Ensuring the speeds are within the valid range
+        speed_motor1 = (speed_motor1 > 100) ? 100 : speed_motor1;
+        speed_motor2 = (speed_motor2 > 100) ? 100 : speed_motor2;
+
+        set_motors(&motor1, &motor2, speed_motor1, speed_motor2, dir_motor1, dir_motor2);
+        shell_print(shell, "Motors set: Motor1 - Speed %d, Direction %d; Motor2 - Speed %d, Direction %d",
+                    speed_motor1, dir_motor1, speed_motor2, dir_motor2);
+    } else {
+        shell_print(shell, "Invalid command or number of arguments.");
+    }
+    return 0;
+}
+
+
+/**
  * @brief Sets the direction of a motor.
  *
  * Sets the direction of the specified motor. It stops the motor (if moving) before
@@ -482,6 +525,38 @@ void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target
     k_mutex_unlock(motor->mutex);
 }
 
+
+void set_motors(motor_t *m1, motor_t *m2, uint32_t speed1, uint32_t speed2, bool dir1, bool dir2) {
+    // Brake both motors to zero speed non-blocking if direction change is needed
+    bool needToStopM1 = (m1->direction != dir1);
+    bool needToStopM2 = (m2->direction != dir2);
+    if (needToStopM1) {
+        motordriver_adjust_motor_speed_non_blocking(m1, 0);
+    }
+    if (needToStopM2) {
+        motordriver_adjust_motor_speed_non_blocking(m2, 0);
+    }
+    // Monitor the speed of both motors if needed
+    while ((needToStopM1 && m1->speed != 0) || (needToStopM2 && m2->speed != 0)) {
+        // Small delay to avoid busy waiting
+        k_msleep(CHECK_INTERVAL_MS);
+    }
+    // Change directions once motors are stopped
+    if (needToStopM1 || needToStopM2) {
+        k_msleep(WAIT_DIR_CHANGE_INTERVAL_MS);
+    }
+    if (needToStopM1) {
+        motordriver_set_dir(m1, dir1);
+    }
+    if (needToStopM2) {
+        motordriver_set_dir(m2, dir2);
+    }
+    // Set the new speeds
+    motordriver_adjust_motor_speed_non_blocking(m1, speed1);
+    motordriver_adjust_motor_speed_non_blocking(m2, speed2);
+}
+
+
 /**
  * @brief Initializes the motor driver module.
  *
@@ -533,8 +608,11 @@ motor_t motordriver_get_motor2() {
 }
 
 SHELL_CMD_REGISTER(motor1, NULL,
-                   "control motordriver of pico-pluto. Execute without arguments to get more info",
+                   "control motor1 of pico-pluto. Execute without arguments to get more info",
                    cmd_motor1);
 SHELL_CMD_REGISTER(motor2, NULL,
-                   "control motordriver of pico-pluto. Execute without arguments to get more info",
+                   "control motor2 of pico-pluto. Execute without arguments to get more info",
                    cmd_motor2);
+SHELL_CMD_REGISTER(motors, NULL,
+                   "control both motors of pico-pluto. Execute without arguments to get more info",
+                   cmd_motors);

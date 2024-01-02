@@ -23,6 +23,10 @@
 
 /** @brief Delay before performing initial speed adjustment. */
 #define ADJUST_SPEED_DELAY_MS 5
+/** @brief CHECK_INTERVAL for verifying speed is 0 before accelerating in opposite direction. */
+#define CHECK_INTERVAL_MS 10
+/** @brief Wait time before moving to opposite direction. */
+#define WAIT_DIR_CHANGE_INTERVAL_MS 100
 
 typedef struct {
     const char* name;
