@@ -18,12 +18,15 @@
 // GPIO specifications from device tree
 #define DIR_1	DT_ALIAS(dir1)
 #define DIR_2	DT_ALIAS(dir2)
+#define PWM_1   DT_ALIAS(pwm1)
+#define PWM_2   DT_ALIAS(pwm2)
+
 typedef struct {
     const char* name;
     struct gpio_dt_spec dir_pin;
-    struct pwm_dt_spec pwm_pin;
-    uint32_t pwm_period_ns;        // PWM period in nanoseconds
+    struct pwm_dt_spec pwm_spec;
 } motor_t;
+
 // Function declarations
 void motordriver_init();
 
