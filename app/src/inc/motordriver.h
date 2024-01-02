@@ -25,6 +25,16 @@ typedef struct {
     const char* name;
     struct gpio_dt_spec dir_pin;
     struct pwm_dt_spec pwm_spec;
+    bool emergency_stop;
+    bool direction;
+    bool target_direction;
+    uint32_t speed;
+    uint32_t target_speed;
+    uint32_t acceleration_rate;
+    uint32_t braking_rate;
+    struct k_mutex *mutex;            // Mutex for thread-safe access
+    struct k_timer *timer;            // Timer for non-blocking speed control
+
 } motor_t;
 
 // Function declarations
