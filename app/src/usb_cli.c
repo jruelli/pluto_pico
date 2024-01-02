@@ -118,6 +118,58 @@ uint8_t simple_strtou8(const char *str) {
 }
 
 /**
+ * @brief Convert a string to an unsigned 16-bit integer.
+ *
+ * This function parses a string and converts it into a 16-bit unsigned integer.
+ * It processes characters until a non-digit is encountered or the end of the
+ * string is reached. This function is used for simple string-to-number conversion
+ * without external dependencies.
+ *
+ * **Usage**\n
+ *     uint16_t num = simple_strtou16("12345"); // Converts "12345" to 12345\n
+ *
+ * @param str Pointer to the null-terminated string to be converted.
+ * @return The converted 16-bit unsigned integer value.
+ */
+uint16_t simple_strtou16(const char *str) {
+    uint16_t result = 0;
+    while (*str) {
+        if (*str < '0' || *str > '9') {
+            break;
+        }
+        result = result * 10 + (*str - '0');
+        str++;
+    }
+    return result;
+}
+
+/**
+ * @brief Convert a string to an unsigned 32-bit integer.
+ *
+ * This function parses a string and converts it into a 32-bit unsigned integer.
+ * It processes characters until a non-digit is encountered or the end of the
+ * string is reached. This function is used for simple string-to-number conversion
+ * without external dependencies.
+ *
+ * **Usage**\n
+ *     uint32_t num = simple_strtou32("1234567890"); // Converts "1234567890" to 1234567890\n
+ *
+ * @param str Pointer to the null-terminated string to be converted.
+ * @return The converted 32-bit unsigned integer value.
+ */
+uint32_t simple_strtou32(const char *str) {
+    uint32_t result = 0;
+    while (*str) {
+        if (*str < '0' || *str > '9') {
+            break;
+        }
+        result = result * 10 + (*str - '0');
+        str++;
+    }
+    return result;
+}
+
+/**
  * @brief Initialize the USB CLI interface.
  *
  * This function sets up the USB CLI interface. It enables the USB subsystem,

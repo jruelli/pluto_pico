@@ -153,12 +153,12 @@ static int cmd_motor1(const struct shell *shell, size_t argc, char **argv) {
                 shell_print(shell, "Invalid braking_rate.");
             }
         } else if (strcmp(argv[1], "config-acc-rate-delay") == 0) {
-            int32_t acceleration_rate_delay = (int32_t)simple_strtou8(argv[2]);
+            int32_t acceleration_rate_delay = (int32_t)simple_strtou32(argv[2]);
             if (acceleration_rate_delay != 0) {
                 motor1.acceleration_rate_delay = acceleration_rate_delay;
             }
         } else if (strcmp(argv[1], "config-brak-rate-delay") == 0) {
-            int32_t braking_rate_delay = (int32_t)simple_strtou8(argv[2]);
+            int32_t braking_rate_delay = (int32_t)simple_strtou32(argv[2]);
             if (braking_rate_delay != 0) {
                 motor1.braking_rate_delay = braking_rate_delay;
             }
@@ -239,12 +239,12 @@ static int cmd_motor2(const struct shell *shell, size_t argc, char **argv) {
                 shell_print(shell, "Invalid braking_rate.");
             }
         } else if (strcmp(argv[1], "config-acc-rate-delay") == 0) {
-            int32_t acceleration_rate_delay = (int32_t)simple_strtou8(argv[2]);
+            int32_t acceleration_rate_delay = (int32_t)simple_strtou32(argv[2]);
             if (acceleration_rate_delay != 0) {
                 motor2.acceleration_rate_delay = acceleration_rate_delay;
             }
         } else if (strcmp(argv[1], "config-brak-rate-delay") == 0) {
-            int32_t braking_rate_delay = (int32_t)simple_strtou8(argv[2]);
+            int32_t braking_rate_delay = (int32_t)simple_strtou32(argv[2]);
             if (braking_rate_delay != 0) {
                 motor2.braking_rate_delay = braking_rate_delay;
             }
