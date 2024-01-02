@@ -1,5 +1,19 @@
-#ifndef TB6612FNG_H
-#define TB6612FNG_H
+/*
+ * Copyright (c) Jannis Ruellmann 2023
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @file relays.h
+ * @brief Relays module.
+ *
+ * Header for relays module
+ *
+ * @author Jannis Ruellmann
+ */
+
+#ifndef APP_RELAYS_H
+#define APP_RELAYS_H
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
@@ -17,8 +31,5 @@
 
 // Function declarations
 void relay_init();
-void control_relays(uint8_t value);
-void control_relay_by_name(const char *name, bool state);
-const char* get_relay_name(int relay_number);
 
-#endif // TB6612FNG_H
+#endif // APP_RELAYS_H

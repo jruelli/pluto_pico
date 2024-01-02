@@ -7,15 +7,28 @@
  * @file usb_cli.c
  * @brief USB Command Line Interface (CLI) Module
  *
- * This module provides functions to set up and manage a USB CLI interface.
- * It handles USB communication with a USB host, including input/output
- * processing and USB interrupts. The module allows users to interact with
- * the device via a USB serial connection.\n
- * The module is started via usb_cli_init() which will set up usb_cli_thread()
- * that will be used to process any incoming commands.
+ * This module offers a command-line interface over USB, allowing for interactive
+ * control and monitoring of the device's functionalities. It initializes and manages
+ * a USB serial connection, enabling communication between the device and a USB host.
+ *
+ * Key functionalities include:
+ * - Initializing the USB CLI interface and handling USB communication setup.
+ * - Registering and handling custom shell commands, such as 'echo' for echoing messages
+ *   and 'version' for displaying application version information.
+ * - Processing user input from the USB serial interface and responding accordingly.
+ *
+ * The module is initialized using usb_cli_init(), which sets up the necessary USB
+ * configurations, registers shell commands, and prepares the system for receiving
+ * and processing commands over the USB interface. This module is essential for
+ * applications requiring direct interaction with the user through a simple and
+ * accessible interface.
+ *
+ * Usage scenarios include debugging, configuration, or control of the embedded device
+ * in development and production environments.
  *
  * @author Jannis Ruellmann
  */
+
 
 #include <zephyr/sys/printk.h>
 #include <zephyr/usb/usb_device.h>
@@ -23,13 +36,23 @@
 #include <app_version.h>
 #include <zephyr/shell/shell.h>
 #include "inc/usb_cli.h"
-#include "inc/relays.h"
 
 LOG_MODULE_REGISTER(usb_cli, LOG_LEVEL_INF);
 
-/* Function prototypes */
-uint8_t simple_strtou8(const char *str);
-
+/**
+ * @brief Echo a message.
+ *
+ * This command echoes the provided message back to the shell. It is used to
+ * demonstrate basic input and output functionality of the shell over USB.
+ *
+ * **Usage**\n
+ *     echo &lt;message&gt; // Echoes the provided message\n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments; argv[1] is the message to echo.
+ * @return Returns 0 on successful execution, or an error code on failure.
+ */
 static int cmd_echo(const struct shell *shell, size_t argc, char **argv) {
     // No additional arguments empty message
     if (argc > 1) {
@@ -40,6 +63,22 @@ static int cmd_echo(const struct shell *shell, size_t argc, char **argv) {
     return 0;
 }
 
+/**
+ * @brief Display version information.
+ *
+ * This command outputs the application's version information. It supports an
+ * optional argument to display the build version. This function is useful for
+ * identifying the software version running on the device.
+ *
+ * **Usage**\n
+ *     version              // Displays the app version\n
+ *     version --build-ver  // Displays the app build version\n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments; argv[1] can be "--build-ver" to display build version.
+ * @return Returns 0 on successful execution, or an error code on failure.
+ */
 static int cmd_version(const struct shell *shell, size_t argc, char **argv) {
     if (argc == 1) {
         // No additional arguments, just print the app version
@@ -52,64 +91,20 @@ static int cmd_version(const struct shell *shell, size_t argc, char **argv) {
     return 0;
 }
 
-static int cmd_relays(const struct shell *shell, size_t argc, char **argv) {
-    if (argc == 1) {
-        shell_print(shell, "Usage: relays --set-bytes <value[0..255]> "
-                           "| --set-relay <name> <state[1/0]> "
-                           "| --list-relays");
-        return 0;
-    }
-    if (strcmp(argv[1], "--set-bytes") == 0) {
-        if (argc == 3) {
-            uint8_t value = simple_strtou8(argv[2]);
-            control_relays(value);
-        } else {
-            shell_print(shell, "Invalid number of arguments for --bin-value");
-        }
-    } else if (strcmp(argv[1], "--set-relay") == 0) {
-        if (argc == 4) {
-            const char *name = argv[2];
-            bool state_val = simple_strtou8(argv[3]) != 0; // Convert to boolean
-            control_relay_by_name(name, state_val);
-        } else {
-            shell_print(shell, "Invalid number of arguments for -w");
-        }
-    } else if (strcmp(argv[1], "--list-relays") == 0) {
-        if (argc == 2) {
-            for (int i = 0; i <= 7; i++) {
-                shell_print(shell, "%s", get_relay_name(i));
-            }
-        } else {
-                shell_print(shell, "Invalid number of arguments for --get-relay-names");
-        }
-    } else {
-        shell_print(shell, "Invalid command or number of arguments.");
-    }
-    return 0;
-}
-
-SHELL_CMD_REGISTER(echo, NULL, "echo <message>", cmd_echo);
-SHELL_CMD_REGISTER(version, NULL, "print version", cmd_version);
-SHELL_CMD_REGISTER(relays, NULL, "control relays of pico. Execute without arguments to get more info", cmd_relays);
-
 /**
- * @brief Initialize the USB CLI interface.
+ * @brief Convert a string to an unsigned 8-bit integer.
  *
- * This function initializes the USB CLI interface by enabling USB, waiting for
- * the Data Terminal Ready (DTR) signal to indicate that the USB serial connection
- * is established, and starting the USB CLI thread for input and output handling.
- * It also sets up the UART interrupt callback, configures the ring buffer, and
- * sends initial messages to the USB serial interface.
+ * This function parses a string and converts it into an 8-bit unsigned integer.
+ * It processes characters until a non-digit is encountered or the end of the
+ * string is reached. This function is used for simple string-to-number conversion
+ * without external dependencies.
+ *
+ * **Usage**\n
+ *     uint8_t num = simple_strtou8("123"); // Converts "123" to 123\n
+ *
+ * @param str Pointer to the null-terminated string to be converted.
+ * @return The converted 8-bit unsigned integer value.
  */
-void usb_cli_init(void) {
-    printk("Starting USB shell...\n");
-    if (usb_enable(NULL)) {
-        printk("Failed to enable USB\n");
-        return;
-    }
-    printk("USB shell started. Type your commands.\n");
-}
-
 uint8_t simple_strtou8(const char *str) {
     uint8_t result = 0;
     while (*str) {
@@ -121,3 +116,82 @@ uint8_t simple_strtou8(const char *str) {
     }
     return result;
 }
+
+/**
+ * @brief Convert a string to an unsigned 16-bit integer.
+ *
+ * This function parses a string and converts it into a 16-bit unsigned integer.
+ * It processes characters until a non-digit is encountered or the end of the
+ * string is reached. This function is used for simple string-to-number conversion
+ * without external dependencies.
+ *
+ * **Usage**\n
+ *     uint16_t num = simple_strtou16("12345"); // Converts "12345" to 12345\n
+ *
+ * @param str Pointer to the null-terminated string to be converted.
+ * @return The converted 16-bit unsigned integer value.
+ */
+uint16_t simple_strtou16(const char *str) {
+    uint16_t result = 0;
+    while (*str) {
+        if (*str < '0' || *str > '9') {
+            break;
+        }
+        result = result * 10 + (*str - '0');
+        str++;
+    }
+    return result;
+}
+
+/**
+ * @brief Convert a string to an unsigned 32-bit integer.
+ *
+ * This function parses a string and converts it into a 32-bit unsigned integer.
+ * It processes characters until a non-digit is encountered or the end of the
+ * string is reached. This function is used for simple string-to-number conversion
+ * without external dependencies.
+ *
+ * **Usage**\n
+ *     uint32_t num = simple_strtou32("1234567890"); // Converts "1234567890" to 1234567890\n
+ *
+ * @param str Pointer to the null-terminated string to be converted.
+ * @return The converted 32-bit unsigned integer value.
+ */
+uint32_t simple_strtou32(const char *str) {
+    uint32_t result = 0;
+    while (*str) {
+        if (*str < '0' || *str > '9') {
+            break;
+        }
+        result = result * 10 + (*str - '0');
+        str++;
+    }
+    return result;
+}
+
+/**
+ * @brief Initialize the USB CLI interface.
+ *
+ * This function sets up the USB CLI interface. It enables the USB subsystem,
+ * waits for a connection to be established, and prepares the shell interface
+ * for command processing. It is essential for enabling communication over USB
+ * and should be called during system initialization.
+ *
+ * **Usage**\n
+ *     usb_cli_init(); // Initializes the USB CLI interface\n
+ *
+ * The function handles USB initialization and provides initial output to
+ * indicate successful startup. It is a critical step in setting up the device's
+ * interactive capabilities.
+ */
+void usb_cli_init(void) {
+    printk("Starting USB shell...\n");
+    if (usb_enable(NULL)) {
+        printk("Failed to enable USB\n");
+        return;
+    }
+    printk("USB shell started. Type your commands.\n");
+}
+
+SHELL_CMD_REGISTER(echo, NULL, "echo <message>", cmd_echo);
+SHELL_CMD_REGISTER(version, NULL, "print version", cmd_version);

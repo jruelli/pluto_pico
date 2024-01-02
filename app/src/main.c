@@ -22,12 +22,10 @@
  * @author Jannis Ruellmann
  */
 
-#include <zephyr/sys/printk.h>
-#include <zephyr/drivers/uart.h>
-
 #include "inc/usb_cli.h"
 #include "inc/user_led.h"
 #include "inc/relays.h"
+#include "inc/motordriver.h"
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -49,7 +47,9 @@ int main(void) {
     usb_cli_init();
     /* Initialize and start the user_led thread */
     user_led_init();
-    /* Test motor*/
+    /* Init relays */
     relay_init();
+    /* Init motordriver */
+    motordriver_init();
     return 0;
 }
