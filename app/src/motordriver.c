@@ -15,14 +15,10 @@
 #include "inc/usb_cli.h"
 
 void init_motor(motor_t* motor);
-void set_dir(motor_t* motor, bool dir);
 void set_speed(motor_t* motor, uint32_t speed_percent);
-void motordriver_stop(motor_t* motor, uint32_t braking_rate);
-void adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed);
-void adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed);
-void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id);
 
-_Noreturn void motor_control_thread(void *p1, void *p2, void *p3);
+// Function declarations
+void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id);
 
 static const struct pwm_dt_spec pwm_1 = PWM_DT_SPEC_GET_OR(PWM_1, {0});
 static const struct pwm_dt_spec pwm_2 = PWM_DT_SPEC_GET_OR(PWM_2, {0});
@@ -47,7 +43,9 @@ motor_t motor1 = {
         .speed = 0,
         .target_speed = 0,
         .acceleration_rate = 10,
+        .acceleration_rate_delay = 50,
         .braking_rate = 10,
+        .braking_rate_delay = 100,
         .mutex = &motor1_mutex,
         .timer = &motor1_timer,
 };
@@ -62,59 +60,144 @@ motor_t motor2 = {
         .speed = 0,
         .target_speed = 0,
         .acceleration_rate = 10,
+        .acceleration_rate_delay = 50,
         .braking_rate = 10,
+        .braking_rate_delay = 100,
         .mutex = &motor2_mutex,
         .timer = &motor2_timer,
 };
 
-#define ACCELERATION_STEP_DELAY_MS 50
-#define BRAKING_STEP_DELAY_MS 100
-
 static int cmd_motor1(const struct shell *shell, size_t argc, char **argv) {
-    if (argc > 2) {
+    if (argc > 1) {
         if (strcmp(argv[1], "set-dir") == 0) {
             bool target_direction = simple_strtou8(argv[2]) != 0;
-            set_dir(&motor1, target_direction);
+            motordriver_set_dir(&motor1, target_direction);
         } else if (strcmp(argv[1], "set-speed") == 0) {
             uint32_t target_speed = simple_strtou8(argv[2]);
-            adjust_motor_speed_non_blocking(&motor1, target_speed);
-        } else if (strcmp(argv[1], "Xset-speed") == 0) {
+            motordriver_adjust_motor_speed_non_blocking(&motor1, target_speed);
+        } else if (strcmp(argv[1], "Zset-speed") == 0) {
             uint32_t speed = simple_strtou8(argv[2]);
             set_speed(&motor1, speed);
-        }
-        else {
+        } else if (strcmp(argv[1], "get-speed") == 0) {
+            shell_print(shell, "%d", motor1.speed);
+        } else if (strcmp(argv[1], "get-dir") == 0) {
+            shell_print(shell, "%d", motor1.direction);
+        } else if (strcmp(argv[1], "get-motor") == 0) {
+            shell_print(shell, "name: %s\ndirection: %d\nspeed: %d\nacceleration_rate: %d\n"
+                               "acceleration_rate_delay: %dms\nbraking_rate: %d\nbraking_rate_delay: %dms",
+                               motor1.name, motor1.direction, motor1.speed, motor1.acceleration_rate,
+                               motor1.acceleration_rate_delay, motor1.braking_rate, motor1.braking_rate_delay);
+        } else if (strcmp(argv[1], "config-acc-rate") == 0) {
+                uint32_t acceleration_rate = simple_strtou8(argv[2]);
+                if (acceleration_rate != 0 && (acceleration_rate < 100)) {
+                    motor1.acceleration_rate = acceleration_rate;
+                } else {
+                    shell_print(shell, "Invalid acceleration_rate.");
+                }
+        } else if (strcmp(argv[1], "config-brak-rate") == 0) {
+            uint32_t braking_rate = simple_strtou8(argv[2]);
+            if (braking_rate != 0 && (braking_rate < 100)) {
+                motor1.braking_rate = braking_rate;
+            } else {
+                shell_print(shell, "Invalid braking_rate.");
+            }
+        } else if (strcmp(argv[1], "config-acc-rate-delay") == 0) {
+            int32_t acceleration_rate_delay = (int32_t)simple_strtou8(argv[2]);
+            if (acceleration_rate_delay != 0) {
+                motor1.acceleration_rate_delay = acceleration_rate_delay;
+            }
+        } else if (strcmp(argv[1], "config-brak-rate-delay") == 0) {
+            int32_t braking_rate_delay = (int32_t)simple_strtou8(argv[2]);
+            if (braking_rate_delay != 0) {
+                motor1.braking_rate_delay = braking_rate_delay;
+            }
+        } else {
             shell_print(shell, "Invalid command or number of arguments.");
         }
     } else {
-        shell_print(shell, "Usage: motor1 set-dir <0/1> or motor1 set-speed <0-100>");
+        shell_print(shell, "Usage: motor1 set-dir <0/1>"
+                           "| motor1 set-speed <0-100>"
+                           "| motor1 Zset-speed <0-100> (unsafe)"
+                           "| motor1 get-dir"
+                           "| motor1 get-speed"
+                           "| motor1 get-motor"
+                           "| motor1 config-acc-rate <0-100>"
+                           "| motor1 config-acc-rate-delay <0-0xFF>"
+                           "| motor1 config-brak-rate <0-100>"
+                           "| motor1 config-brak-rate-delay <0-0xFF>");
     }
     return 0;
 }
 
 static int cmd_motor2(const struct shell *shell, size_t argc, char **argv) {
-    if (argc > 2) {
+    if (argc > 1) {
         if (strcmp(argv[1], "set-dir") == 0) {
             bool target_direction = simple_strtou8(argv[2]) != 0;
-            set_dir(&motor2, target_direction);
+            motordriver_set_dir(&motor2, target_direction);
         } else if (strcmp(argv[1], "set-speed") == 0) {
             uint32_t target_speed = simple_strtou8(argv[2]);
-            adjust_motor_speed_non_blocking(&motor2, target_speed);
+            motordriver_adjust_motor_speed_non_blocking(&motor2, target_speed);
+        } else if (strcmp(argv[1], "Zset-speed") == 0) {
+            uint32_t speed = simple_strtou8(argv[2]);
+            set_speed(&motor2, speed);
+        } else if (strcmp(argv[1], "get-speed") == 0) {
+            shell_print(shell, "%d", motor2.speed);
+        } else if (strcmp(argv[1], "get-dir") == 0) {
+            shell_print(shell, "%d", motor2.direction);
+        } else if (strcmp(argv[1], "get-motor") == 0) {
+            shell_print(shell, "name: %s\ndirection: %d\nspeed: %d\nacceleration_rate: %d\n"
+                               "acceleration_rate_delay: %dms\nbraking_rate: %d\nbraking_rate_delay: %dms",
+                        motor2.name, motor2.direction, motor2.speed, motor2.acceleration_rate,
+                        motor2.acceleration_rate_delay, motor2.braking_rate, motor2.braking_rate_delay);
+        } else if (strcmp(argv[1], "config-acc-rate") == 0) {
+            uint32_t acceleration_rate = simple_strtou8(argv[2]);
+            if (acceleration_rate != 0 && (acceleration_rate < 100)) {
+                motor2.acceleration_rate = acceleration_rate;
+            } else {
+                shell_print(shell, "Invalid acceleration_rate.");
+            }
+        } else if (strcmp(argv[1], "config-brak-rate") == 0) {
+            uint32_t braking_rate = simple_strtou8(argv[2]);
+            if (braking_rate != 0 && (braking_rate < 100)) {
+                motor2.braking_rate = braking_rate;
+            } else {
+                shell_print(shell, "Invalid braking_rate.");
+            }
+        } else if (strcmp(argv[1], "config-acc-rate-delay") == 0) {
+            int32_t acceleration_rate_delay = (int32_t)simple_strtou8(argv[2]);
+            if (acceleration_rate_delay != 0) {
+                motor2.acceleration_rate_delay = acceleration_rate_delay;
+            }
+        } else if (strcmp(argv[1], "config-brak-rate-delay") == 0) {
+            int32_t braking_rate_delay = (int32_t)simple_strtou8(argv[2]);
+            if (braking_rate_delay != 0) {
+                motor2.braking_rate_delay = braking_rate_delay;
+            }
         } else {
             shell_print(shell, "Invalid command or number of arguments.");
         }
     } else {
-        shell_print(shell, "Usage: motor2 set-dir <0/1> or motor2 set-speed <0-100>");
+        shell_print(shell, "Usage: motor2 set-dir <0/1>"
+                           "| motor2 set-speed <0-100>"
+                           "| motor2 Zset-speed <0-100> (unsafe)"
+                           "| motor2 get-dir"
+                           "| motor2 get-speed"
+                           "| motor2 get-motor"
+                           "| motor2 config-acc-rate <0-100>"
+                           "| motor2 config-acc-rate-delay <0-0xFF>"
+                           "| motor2 config-brak-rate <0-100>"
+                           "| motor2 config-brak-rate-delay <0-0xFF>");
     }
     return 0;
 }
 
-void set_dir(motor_t* motor, bool dir) {
+void motordriver_set_dir(motor_t* motor, bool dir) {
     // Set the direction of the motor
     k_mutex_lock(motor->mutex, K_FOREVER);
     if (motor->direction != dir)
     {
         uint32_t target_speed = 0;
-        adjust_motor_speed_blocking(motor, target_speed);
+        motordriver_adjust_motor_speed_blocking(motor, target_speed);
         motor->direction = dir;
         gpio_pin_set(motor->dir_pin.port, motor->dir_pin.pin,motor->direction);
         printk("Direction of %s set to %d\n", motor->name, motor->direction);
@@ -133,8 +216,7 @@ void set_dir(motor_t* motor, bool dir) {
  * @param speed_percent The speed of the motor as a percentage (0-100).
  */
 void set_speed(motor_t* motor, uint32_t speed_percent) {
-    struct k_mutex *mutex = (motor == &motor1) ? &motor1_mutex : &motor2_mutex;
-    k_mutex_lock(mutex, K_FOREVER);
+    k_mutex_lock(motor->mutex, K_FOREVER);
     // Ensure the speed_percent is within bounds
     if (speed_percent > 100) {
         speed_percent = 100;
@@ -152,7 +234,7 @@ void set_speed(motor_t* motor, uint32_t speed_percent) {
         // Update the motors speed in the struct
         motor->speed = speed_percent;
     }
-    k_mutex_unlock(mutex);
+    k_mutex_unlock(motor->mutex);
 }
 
 void init_motor(motor_t* motor) {
@@ -168,9 +250,9 @@ void init_motor(motor_t* motor) {
     // Set initial direction and speed (PWM) to OFF
     bool initial_direction = 0;
     uint32_t initial_speed = 0;
-    set_dir(motor, initial_direction);
+    motordriver_set_dir(motor, initial_direction);
     printk("%s configured!\n", motor->name);
-    adjust_motor_speed_blocking(motor, initial_speed);
+    motordriver_adjust_motor_speed_blocking(motor, initial_speed);
 }
 
 /**
@@ -180,7 +262,7 @@ void init_motor(motor_t* motor) {
  * @param target_speed The target speed as a percentage (0-100).
  * @param rate The rate of speed change (acceleration or braking).
  */
-void adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed) {
+void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed) {
     if (motor->acceleration_rate == 0) {
         printk("Rate of speed change cannot be zero.\n");
         return;
@@ -195,13 +277,13 @@ void adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed) {
             motor->speed += (motor->speed + motor->acceleration_rate > target_speed) ?
                             (target_speed - motor->speed) : motor->acceleration_rate;
             set_speed(motor, motor->speed);
-            k_msleep(ACCELERATION_STEP_DELAY_MS);
+            k_msleep(motor->acceleration_rate_delay);
         } else if (motor->speed > target_speed){
             // Brake
             motor->speed -= (motor->speed - motor->braking_rate < target_speed) ?
                             (motor->speed - target_speed) : motor->braking_rate;
             set_speed(motor, motor->speed);
-            k_msleep(BRAKING_STEP_DELAY_MS);
+            k_msleep(motor->braking_rate_delay);
         }
     }
     printk("%s target speed: %d reached.\n", motor->name, motor->speed);
@@ -225,10 +307,10 @@ void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id) {
     if (motor->speed != motor->target_speed) {
         if (motor->speed < motor->target_speed) {
             //acceleration timer
-            k_timer_start(timer_id, K_MSEC(ACCELERATION_STEP_DELAY_MS), K_NO_WAIT);
+            k_timer_start(timer_id, K_MSEC(motor->acceleration_rate_delay), K_NO_WAIT);
         } else {
             //braking timer
-            k_timer_start(timer_id, K_MSEC(BRAKING_STEP_DELAY_MS), K_NO_WAIT);
+            k_timer_start(timer_id, K_MSEC(motor->braking_rate_delay), K_NO_WAIT);
         }
     } else {
         printk("%s target speed: %d reached.\n", motor->name, motor->speed);
@@ -244,7 +326,7 @@ void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id) {
  * @param target_speed The target speed as a percentage (0-100).
  * @param rate The rate of speed change (acceleration or braking).
  */
-void adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed) {
+void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed) {
     if (motor->acceleration_rate == 0 || motor->braking_rate == 0) {
         printk("Rate of speed change cannot be zero.\n");
         return;
@@ -254,8 +336,8 @@ void adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed) {
     // Only start or restart the timer if the target speed has changed
     if (motor->target_speed != new_target_speed) {
         motor->target_speed = new_target_speed;
-        // wait a bit before starting adjusting speed. Define used as placeholder
-        k_timer_start(motor->timer, K_MSEC(ACCELERATION_STEP_DELAY_MS), K_NO_WAIT);
+        // wait a bit before starting adjusting speed
+        k_timer_start(motor->timer, K_MSEC(ADJUST_SPEED_DELAY_MS), K_NO_WAIT);
     }
     k_mutex_unlock(motor->mutex);
 }
@@ -271,6 +353,13 @@ void motordriver_init() {
     init_motor(&motor2);
 }
 
+motor_t motordriver_get_motor1() {
+    return motor1;
+}
+
+motor_t motordriver_get_motor2() {
+    return motor2;
+}
 SHELL_CMD_REGISTER(motor1, NULL,
                    "control motordriver of pico-pluto. Execute without arguments to get more info",
                    cmd_motor1);

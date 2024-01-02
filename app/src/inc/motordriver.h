@@ -21,6 +21,8 @@
 #define PWM_1   DT_ALIAS(pwm1)
 #define PWM_2   DT_ALIAS(pwm2)
 
+#define ADJUST_SPEED_DELAY_MS 5
+
 typedef struct {
     const char* name;
     struct gpio_dt_spec dir_pin;
@@ -31,7 +33,9 @@ typedef struct {
     uint32_t speed;
     uint32_t target_speed;
     uint32_t acceleration_rate;
+    int32_t acceleration_rate_delay;
     uint32_t braking_rate;
+    int32_t braking_rate_delay;
     struct k_mutex *mutex;            // Mutex for thread-safe access
     struct k_timer *timer;            // Timer for non-blocking speed control
 
@@ -39,5 +43,11 @@ typedef struct {
 
 // Function declarations
 void motordriver_init();
+motor_t motordriver_get_motor1();
+motor_t motordriver_get_motor2();
+void motordriver_set_dir(motor_t* motor, bool dir);
+void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed);
+void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed);
+
 
 #endif //APP_MOTORDRIVER_H
