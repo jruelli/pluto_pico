@@ -16,6 +16,26 @@
     };
 };
 
+&pwm {
+    status = "okay";
+    pinctrl-0 = <&my_pwm_pinctrl>;
+    pinctrl-names = "default";
+    divider-frac-0 = <15>;
+    divider-int-0 = <255>;
+    pwm_leds {
+        compatible = "pwm-leds";
+        status = "okay";
+        pwm_motor1: pwm_motor_1 {
+            pwms = <&pwm 14 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+            label = "PWM_1";
+        };
+        pwm_motor2: pwm_motor_2 {
+            pwms = <&pwm 15 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+            label = "PWM_2";
+        };
+    };
+};
+
 / {
     gpio_keys {
         compatible = "gpio-keys";
@@ -72,5 +92,17 @@
         relay8 = &relay8;
         dir1 = &dir1;
         dir2 = &dir2;
+        pwm1 = &pwm_motor1;
+        pwm2 = &pwm_motor2;
+    };
+
+};
+
+&pinctrl {
+    my_pwm_pinctrl: my_pwm_pinctrl {
+        group1 {
+            pinmux = <PWM_7A_P14>,
+                     <PWM_7B_P15>;
+        };
     };
 };
