@@ -3,6 +3,33 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+/**
+ * @file motordriver.c
+ * @brief Motor Control Module
+ *
+ * This module provides a set of functions for controlling and querying the state
+ * of motor drivers in an embedded system. It includes capabilities to set the speed
+ * and direction of individual motors, retrieve the current state of motors, and
+ * interact with the motor control system.
+ * The functions make use of PWM (Pulse Width Modulation) and GPIO (General-Purpose Input/Output)
+ * pins to manage motor control.
+ *
+ * This module facilitates the integration of motor control into larger systems,
+ * allowing for effective management of mechanical movements and automation tasks.
+ * It is designed to be easy to use and integrate into various embedded systems
+ * requiring motor control functionality.
+ *
+ * Key functionalities include:
+ * - Setting the speed and direction of motors.
+ * - Querying the state of motors.
+ * - Command-line interface for motor control.
+ * - Initialization and configuration of motor control hardware.
+ *
+ * The module is a part of a larger system and can be utilized in applications such
+ * as robotics, automation, and other scenarios where precise motor control is essential.
+ *
+ * @author Jannis Ruellmann
+ */
 
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/pwm.h>
