@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Jannis Ruellmann 2023
+ * Copyright (c) Jannis Ruellmann 2024
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -10,7 +10,7 @@
  * This module provides a set of functions for controlling and querying the state
  * of motor drivers in an embedded system. It includes capabilities to set the speed
  * and direction of individual motors, retrieve the current state of motors, and
- * interact with the motor control system through a command-line interface.
+ * interact with the motor control system.
  * The functions make use of PWM (Pulse Width Modulation) and GPIO (General-Purpose Input/Output)
  * pins to manage motor control.
  *
@@ -31,22 +31,13 @@
  * @author Jannis Ruellmann
  */
 
-#include <sys/cdefs.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/pwm.h>
 #include <zephyr/sys/printk.h>
-#include <zephyr/shell/shell.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
 
 #include "inc/motordriver.h"
-#include "inc/usb_cli.h"
-
-// Function declarations
-void init_motor(motor_t* motor);
-void set_speed(motor_t* motor, uint32_t speed_percent);
-void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id);
-void set_motors(motor_t *motor1, motor_t *motor2, uint32_t speed1, uint32_t speed2, bool dir1, bool dir2);
 
 static const struct pwm_dt_spec pwm_1 = PWM_DT_SPEC_GET_OR(PWM_1, {0});
 static const struct pwm_dt_spec pwm_2 = PWM_DT_SPEC_GET_OR(PWM_2, {0});
@@ -71,7 +62,7 @@ motor_t motor1 = {
         .speed = 0,
         .target_speed = 0,
         .acceleration_rate = 10,
-        .acceleration_rate_delay = 50,
+        .acceleration_rate_delay = 100,
         .braking_rate = 10,
         .braking_rate_delay = 100,
         .mutex = &motor1_mutex,
@@ -88,226 +79,12 @@ motor_t motor2 = {
         .speed = 0,
         .target_speed = 0,
         .acceleration_rate = 10,
-        .acceleration_rate_delay = 50,
+        .acceleration_rate_delay = 100,
         .braking_rate = 10,
         .braking_rate_delay = 100,
         .mutex = &motor2_mutex,
         .timer = &motor2_timer,
 };
-
-/**
- * @brief Shell command function to control and query motor1.
- *
- * This function is designed to be used as a shell command for controlling
- * and querying the state of motor1. It supports multiple sub-commands for
- * setting motor direction, speed, and querying motor status.
- *
- * **Usage**\n
- *     motor1 set-dir <0/1>                 // Sets the direction of motor\n
- *     motor1 set-speed <0-100>             // Sets the speed of motor (0..100)\n
- *     motor1 Zset-speed <0-100> (unsafe)   // UNSAFE Directly sets the PWM speed of motor (0..100)\n
- *     motor1 get-speed                     // Gets the current speed of motor\n
- *     motor1 get-dir                       // Gets the current direction of motor\n
- *     motor1 get-motor                     // Gets the current configuration of motor\n
- *     motor1 config-acc-rate <0-100>       // Configures the acceleration rate (1..99)\n
- *     motor1 config-brak-rate <0-100>      // Configures the braking rate (1..99)\n
- *     motor1 config-acc-rate-delay <ms>    // Configures the acceleration rate delay (1..0xFF)\n
- *     motor1 config-brak-rate-delay <ms>   // Configures the braking rate delay (1..0xFF)\n
- *
- * @param shell Pointer to the shell structure.
- * @param argc Number of arguments.
- * @param argv Array of arguments.
- * @return Returns 0 on success, or an error code on failure.
- */
-static int cmd_motor1(const struct shell *shell, size_t argc, char **argv) {
-    if (argc > 1) {
-        if (strcmp(argv[1], "set-dir") == 0) {
-            bool target_direction = simple_strtou8(argv[2]) != 0;
-            motordriver_set_dir(&motor1, target_direction);
-        } else if (strcmp(argv[1], "set-speed") == 0) {
-            uint32_t target_speed = simple_strtou8(argv[2]);
-            motordriver_adjust_motor_speed_non_blocking(&motor1, target_speed);
-        } else if (strcmp(argv[1], "Zset-speed") == 0) {
-            uint32_t speed = simple_strtou8(argv[2]);
-            set_speed(&motor1, speed);
-        } else if (strcmp(argv[1], "get-speed") == 0) {
-            shell_print(shell, "%d", motor1.speed);
-        } else if (strcmp(argv[1], "get-dir") == 0) {
-            shell_print(shell, "%d", motor1.direction);
-        } else if (strcmp(argv[1], "get-motor") == 0) {
-            shell_print(shell, "name: %s\ndirection: %d\nspeed: %d\nacceleration_rate: %d\n"
-                               "acceleration_rate_delay: %dms\nbraking_rate: %d\nbraking_rate_delay: %dms",
-                               motor1.name, motor1.direction, motor1.speed, motor1.acceleration_rate,
-                               motor1.acceleration_rate_delay, motor1.braking_rate, motor1.braking_rate_delay);
-        } else if (strcmp(argv[1], "config-acc-rate") == 0) {
-                uint32_t acceleration_rate = simple_strtou8(argv[2]);
-                if (acceleration_rate != 0 && (acceleration_rate < 100)) {
-                    motor1.acceleration_rate = acceleration_rate;
-                } else {
-                    shell_print(shell, "Invalid acceleration_rate.");
-                }
-        } else if (strcmp(argv[1], "config-brak-rate") == 0) {
-            uint32_t braking_rate = simple_strtou8(argv[2]);
-            if (braking_rate != 0 && (braking_rate < 100)) {
-                motor1.braking_rate = braking_rate;
-            } else {
-                shell_print(shell, "Invalid braking_rate.");
-            }
-        } else if (strcmp(argv[1], "config-acc-rate-delay") == 0) {
-            int32_t acceleration_rate_delay = (int32_t)simple_strtou32(argv[2]);
-            if (acceleration_rate_delay != 0) {
-                motor1.acceleration_rate_delay = acceleration_rate_delay;
-            }
-        } else if (strcmp(argv[1], "config-brak-rate-delay") == 0) {
-            int32_t braking_rate_delay = (int32_t)simple_strtou32(argv[2]);
-            if (braking_rate_delay != 0) {
-                motor1.braking_rate_delay = braking_rate_delay;
-            }
-        } else {
-            shell_print(shell, "Invalid command or number of arguments.");
-        }
-    } else {
-        shell_print(shell, "Usage: motor1 set-dir <0/1>"
-                           "| motor1 set-speed <0-100>"
-                           "| motor1 Zset-speed <0-100> (unsafe)"
-                           "| motor1 get-dir"
-                           "| motor1 get-speed"
-                           "| motor1 get-motor"
-                           "| motor1 config-acc-rate <0-100>"
-                           "| motor1 config-acc-rate-delay <0-0xFF>"
-                           "| motor1 config-brak-rate <0-100>"
-                           "| motor1 config-brak-rate-delay <0-0xFF>");
-    }
-    return 0;
-}
-
-/**
- * @brief Shell command function to control and query motor2.
- *
- * This function is designed to be used as a shell command for controlling
- * and querying the state of motor1. It supports multiple sub-commands for
- * setting motor direction, speed, and querying motor status.
- *
- * **Usage**\n
- *     motor2 set-dir <0/1>                 // Sets the direction of motor\n
- *     motor2 set-speed <0-100>             // Sets the speed of motor (0..100)\n
- *     motor2 Zset-speed <0-100> (unsafe)   // UNSAFE Directly sets the PWM speed of motor (0..100)\n
- *     motor2 get-speed                     // Gets the current speed of motor\n
- *     motor2 get-dir                       // Gets the current direction of motor\n
- *     motor2 get-motor                     // Gets the current configuration of motor\n
- *     motor2 config-acc-rate <0-100>       // Configures the acceleration rate (1..99)\n
- *     motor2 config-brak-rate <0-100>      // Configures the braking rate (1..99)\n
- *     motor2 config-acc-rate-delay <ms>    // Configures the acceleration rate delay (1..0xFF)\n
- *     motor2 config-brak-rate-delay <ms>   // Configures the braking rate delay (1..0xFF)\n
- *
- * @param shell Pointer to the shell structure.
- * @param argc Number of arguments.
- * @param argv Array of arguments.
- * @return Returns 0 on success, or an error code on failure.
- */
-static int cmd_motor2(const struct shell *shell, size_t argc, char **argv) {
-    if (argc > 1) {
-        if (strcmp(argv[1], "set-dir") == 0) {
-            bool target_direction = simple_strtou8(argv[2]) != 0;
-            motordriver_set_dir(&motor2, target_direction);
-        } else if (strcmp(argv[1], "set-speed") == 0) {
-            uint32_t target_speed = simple_strtou8(argv[2]);
-            motordriver_adjust_motor_speed_non_blocking(&motor2, target_speed);
-        } else if (strcmp(argv[1], "Zset-speed") == 0) {
-            uint32_t speed = simple_strtou8(argv[2]);
-            set_speed(&motor2, speed);
-        } else if (strcmp(argv[1], "get-speed") == 0) {
-            shell_print(shell, "%d", motor2.speed);
-        } else if (strcmp(argv[1], "get-dir") == 0) {
-            shell_print(shell, "%d", motor2.direction);
-        } else if (strcmp(argv[1], "get-motor") == 0) {
-            shell_print(shell, "name: %s\ndirection: %d\nspeed: %d\nacceleration_rate: %d\n"
-                               "acceleration_rate_delay: %dms\nbraking_rate: %d\nbraking_rate_delay: %dms",
-                        motor2.name, motor2.direction, motor2.speed, motor2.acceleration_rate,
-                        motor2.acceleration_rate_delay, motor2.braking_rate, motor2.braking_rate_delay);
-        } else if (strcmp(argv[1], "config-acc-rate") == 0) {
-            uint32_t acceleration_rate = simple_strtou8(argv[2]);
-            if (acceleration_rate != 0 && (acceleration_rate < 100)) {
-                motor2.acceleration_rate = acceleration_rate;
-            } else {
-                shell_print(shell, "Invalid acceleration_rate.");
-            }
-        } else if (strcmp(argv[1], "config-brak-rate") == 0) {
-            uint32_t braking_rate = simple_strtou8(argv[2]);
-            if (braking_rate != 0 && (braking_rate < 100)) {
-                motor2.braking_rate = braking_rate;
-            } else {
-                shell_print(shell, "Invalid braking_rate.");
-            }
-        } else if (strcmp(argv[1], "config-acc-rate-delay") == 0) {
-            int32_t acceleration_rate_delay = (int32_t)simple_strtou32(argv[2]);
-            if (acceleration_rate_delay != 0) {
-                motor2.acceleration_rate_delay = acceleration_rate_delay;
-            }
-        } else if (strcmp(argv[1], "config-brak-rate-delay") == 0) {
-            int32_t braking_rate_delay = (int32_t)simple_strtou32(argv[2]);
-            if (braking_rate_delay != 0) {
-                motor2.braking_rate_delay = braking_rate_delay;
-            }
-        } else {
-            shell_print(shell, "Invalid command or number of arguments.");
-        }
-    } else {
-        shell_print(shell, "Usage: motor2 set-dir <0/1>"
-                           "| motor2 set-speed <0-100>"
-                           "| motor2 Zset-speed <0-100> (unsafe)"
-                           "| motor2 get-dir"
-                           "| motor2 get-speed"
-                           "| motor2 get-motor"
-                           "| motor2 config-acc-rate <0-100>"
-                           "| motor2 config-acc-rate-delay <0-0xFF>"
-                           "| motor2 config-brak-rate <0-100>"
-                           "| motor2 config-brak-rate-delay <0-0xFF>");
-    }
-    return 0;
-}
-
-/**
- * @brief Shell command function to control both motors simultaneously.
- *
- * This function allows for simultaneous control of two motors, including setting
- * their speeds and directions. It's useful for coordinated movements of a dual-motor
- * system like a robot with chain tracks.
- *
- * **Usage**\n
- *     motors set <speed_motor1> <dir_motor1> <speed_motor2> <dir_motor2>\n
- *        - Sets the speed (0-100) and direction (0/1) for both motors.\n
- *
- * @param shell Pointer to the shell structure.
- * @param argc Number of arguments.
- * @param argv Array of arguments.
- * @return Returns 0 on success, or an error code on failure.
- */
-static int cmd_motors(const struct shell *shell, size_t argc, char **argv) {
-    if (argc < 5) {
-        shell_print(shell, "Usage: motors set <speed_motor1> <dir_motor1> <speed_motor2> <dir_motor2>");
-        return 0;
-    }
-
-    if (strcmp(argv[1], "set") == 0) {
-        uint32_t speed_motor1 = simple_strtou32(argv[2]);
-        bool dir_motor1 = simple_strtou32(argv[3]) != 0;
-        uint32_t speed_motor2 = simple_strtou32(argv[4]);
-        bool dir_motor2 = simple_strtou32(argv[5]) != 0;
-
-        // Ensuring the speeds are within the valid range
-        speed_motor1 = (speed_motor1 > 100) ? 100 : speed_motor1;
-        speed_motor2 = (speed_motor2 > 100) ? 100 : speed_motor2;
-
-        set_motors(&motor1, &motor2, speed_motor1, speed_motor2, dir_motor1, dir_motor2);
-        shell_print(shell, "Motors set: Motor1 - Speed %d, Direction %d; Motor2 - Speed %d, Direction %d",
-                    speed_motor1, dir_motor1, speed_motor2, dir_motor2);
-    } else {
-        shell_print(shell, "Invalid command or number of arguments.");
-    }
-    return 0;
-}
-
 
 /**
  * @brief Sets the direction of a motor.
@@ -525,7 +302,6 @@ void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target
     k_mutex_unlock(motor->mutex);
 }
 
-
 void set_motors(motor_t *m1, motor_t *m2, uint32_t speed1, uint32_t speed2, bool dir1, bool dir2) {
     // Brake both motors to zero speed non-blocking if direction change is needed
     bool needToStopM1 = (m1->direction != dir1);
@@ -572,47 +348,7 @@ void set_motors(motor_t *m1, motor_t *m2, uint32_t speed1, uint32_t speed2, bool
 void motordriver_init() {
     init_motor(&motor1);
     init_motor(&motor2);
+    cmd_motor1_init();
+    cmd_motor2_init();
+    cmd_motors_init();
 }
-
-/**
- * @brief Retrieves the current state of motor1.
- *
- * Provides the current state of motor1, including its direction, speed, and other
- * configuration parameters.
- *
- * **Usage**
- * ```
- * motor_t motorState = motordriver_get_motor1(); // Get current state of motor1
- * ```
- *
- * @return The motor1 structure with its current state.
- */
-motor_t motordriver_get_motor1() {
-    return motor1;
-}
-
-/**
- * @brief Retrieves the current state of motor2.
- *
- * Similar to `motordriver_get_motor1`, provides the current state of motor2.
- *
- * **Usage**
- * ```
- * motor_t motorState = motordriver_get_motor2(); // Get current state of motor2
- * ```
- *
- * @return The motor2 structure with its current state.
- */
-motor_t motordriver_get_motor2() {
-    return motor2;
-}
-
-SHELL_CMD_REGISTER(motor1, NULL,
-                   "control motor1 of pico-pluto. Execute without arguments to get more info",
-                   cmd_motor1);
-SHELL_CMD_REGISTER(motor2, NULL,
-                   "control motor2 of pico-pluto. Execute without arguments to get more info",
-                   cmd_motor2);
-SHELL_CMD_REGISTER(motors, NULL,
-                   "control both motors of pico-pluto. Execute without arguments to get more info",
-                   cmd_motors);

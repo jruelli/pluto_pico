@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Jannis Ruellmann 2023
+ * Copyright (c) Jannis Ruellmann 2024
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -48,11 +48,22 @@ typedef struct {
 
 // Function declarations
 void motordriver_init();
-motor_t motordriver_get_motor1();
-motor_t motordriver_get_motor2();
+
+// Function declarations
+void init_motor(motor_t* motor);
+void set_speed(motor_t* motor, uint32_t speed_percent);
+void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id);
+void set_motors(motor_t *motor1, motor_t *motor2, uint32_t speed1, uint32_t speed2, bool dir1, bool dir2);
 void motordriver_set_dir(motor_t* motor, bool dir);
 void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed);
 void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed);
 
+void cmd_motor1_init();
+void cmd_motor2_init();
+void cmd_motors_init();
+
+// Declare global motor structs
+extern motor_t motor1;
+extern motor_t motor2;
 
 #endif //APP_MOTORDRIVER_H

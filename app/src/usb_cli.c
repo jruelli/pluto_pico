@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Jannis Ruellmann 2023
+ * Copyright (c) Jannis Ruellmann 2024
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -53,41 +53,57 @@ LOG_MODULE_REGISTER(usb_cli, LOG_LEVEL_INF);
  * @param argv Array of arguments; argv[1] is the message to echo.
  * @return Returns 0 on successful execution, or an error code on failure.
  */
-static int cmd_echo(const struct shell *shell, size_t argc, char **argv) {
+static int cmd_echo(const struct shell *sh, size_t argc, char **argv) {
     // No additional arguments empty message
     if (argc > 1) {
-        shell_print(shell, "%s", argv[1]);
+        shell_print(sh, "%s", argv[1]);
     } else {
-        shell_print(shell, "Usage: echo <message>");
+        shell_print(sh, "Usage: echo <message>");
     }
     return 0;
 }
 
 /**
- * @brief Display version information.
+ * @brief Display version.
  *
- * This command outputs the application's version information. It supports an
- * optional argument to display the build version. This function is useful for
+ * This command outputs the application's version. This function is useful for
  * identifying the software version running on the device.
- *
+ * This is a root (level 0) command "version".
  * **Usage**\n
- *     version              // Displays the app version\n
- *     version --build-ver  // Displays the app build version\n
+ *     version\n
  *
  * @param shell Pointer to the shell structure.
  * @param argc Number of arguments.
  * @param argv Array of arguments; argv[1] can be "--build-ver" to display build version.
  * @return Returns 0 on successful execution, or an error code on failure.
  */
-static int cmd_version(const struct shell *shell, size_t argc, char **argv) {
+static int cmd_version(const struct shell *sh, size_t argc, char **argv) {
     if (argc == 1) {
-        // No additional arguments, just print the app version
-        shell_print(shell, "App Version: " APP_VERSION_STRING);
-    } else if (argc == 2 && strcmp(argv[1], "--build-ver") == 0) {
-        shell_print(shell, "App Build Version: " USB_CLI_X_STR(APP_BUILD_VERSION));
+        shell_print(sh, "App Version: " APP_VERSION_STRING);
     } else {
-        shell_print(shell, "Unknown parameter: '%s'", argv[1]);
+        shell_print(sh, "Unknown parameter: '%s'", argv[1]);
     }
+    return 0;
+}
+
+/**
+ * @brief Display app build version.
+ *
+ * This command outputs the application's build version. This function is useful for
+ * identifying the software version running on the device.
+ * This is a subcommand (level 1 command) array for command "version".
+ *
+ * **Usage**\n
+ *     version --build-ver  // Displays the app build version\n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments;
+ * @return Returns 0 on successful execution, or an error code on failure.
+ */
+static int cmd_version_build_ver(const struct shell *sh, size_t argc,
+                                 char **argv) {
+    shell_print(sh, "App Build Version: " USB_CLI_X_STR(APP_BUILD_VERSION));
     return 0;
 }
 
@@ -193,5 +209,15 @@ void usb_cli_init(void) {
     printk("USB shell started. Type your commands.\n");
 }
 
-SHELL_CMD_REGISTER(echo, NULL, "echo <message>", cmd_echo);
-SHELL_CMD_REGISTER(version, NULL, "print version", cmd_version);
+/* Creating subcommands (level 1 command) array for command "version". */
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_version,
+                               SHELL_CMD(build-ver, NULL, "App Build Version.",
+                                         cmd_version_build_ver),
+                               SHELL_SUBCMD_SET_END
+);
+
+/* Creating root (level 0) command "echo" */
+SHELL_CMD_REGISTER(echo, NULL, "echo <message> back", cmd_echo);
+
+/* Creating root (level 0) command "version" */
+SHELL_CMD_REGISTER(version, &sub_version, "App version.", cmd_version);

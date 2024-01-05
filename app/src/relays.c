@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Jannis Ruellmann 2023
+ * Copyright (c) Jannis Ruellmann 2024
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -94,6 +94,7 @@ void set_relays(uint8_t value) {
  * @param state The desired state of the relay (true for ON, false for OFF).
  */
 void set_relay_by_name(const char *name, bool state) {
+    printk("Setting relay: %s to state: %u\n", name, (uint8_t)state);
     if (strcmp(name, "relay_0") == 0) {
         gpio_pin_set(relay_0.port, relay_0.pin, state);
     } else if (strcmp(name, "relay_1") == 0) {
@@ -110,6 +111,8 @@ void set_relay_by_name(const char *name, bool state) {
         gpio_pin_set(relay_6.port, relay_6.pin, state);
     } else if (strcmp(name, "relay_7") == 0) {
         gpio_pin_set(relay_7.port, relay_7.pin, state);
+    } else {
+        printk("relay not known.\n");
     }
 }
 
@@ -144,6 +147,8 @@ bool get_relay_by_name(const char *name) {
         state = gpio_pin_get(relay_6.port, relay_6.pin);
     } else if (strcmp(name, "relay_7") == 0) {
         state = gpio_pin_get(relay_7.port, relay_7.pin);
+    } else {
+        printk("relay not known.\n");
     }
     return state;
 }
@@ -176,17 +181,10 @@ const char* get_relay_name(int relay_number) {
 }
 
 /**
- * @brief Shell command function to control and query relays.
+ * @brief Root command function for relays.
  *
- * This function is designed to be used as a shell command for controlling
- * and querying the state of relays. It supports multiple sub-commands for
- * setting relay states, retrieving relay states, and listing all relays.
- *
- * **Usage**\n
- *     relays --set-bytes &lt;value&gt;    // Sets all relays according to &lt;value&gt;\n
- *     relays --get-relay &lt;name&gt;     // Gets the state of the relay &lt;name&gt;\n
- *     relays --set-relay &lt;name&gt; &lt;state&gt; // Sets the state of relay &lt;name&gt; and &lt;state&gt;\n
- *     relays --list-relays                // Lists all relays\n
+ * This function is called if a wrong subcommand has been selected.
+ * This is a root command (level 0 command).
  *
  * @param shell Pointer to the shell structure.
  * @param argc Number of arguments.
@@ -194,46 +192,105 @@ const char* get_relay_name(int relay_number) {
  * @return Returns 0 on success, or an error code on failure.
  */
 static int cmd_relays(const struct shell *shell, size_t argc, char **argv) {
-    if (argc == 1) {
-        shell_print(shell, "Usage: relays --set-bytes <value[0..255]> "
-                           "| --get-relay <name> "
-                           "| --set-relay <name> <state[1/0]> "
-                           "| --list-relays");
-        return 0;
+    shell_error(shell, "Invalid subcommand or number of arguments.");
+    return 0;
+}
+
+/**
+ * @brief Sets the state of relay &lt;name&gt; and &lt;state&gt;
+ *
+ * This command is useful to set a specific relay to a specific state.
+ * This is a subcommand (level 1 command) array for command "relays".
+ *
+ * **Usage**\n
+ *     relays --set-relay &lt;name&gt; &lt;state&gt; \n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments;
+ * @return Returns 0 on successful execution, or an error code on failure.
+ */
+static int cmd_relays_set_relay(const struct shell *shell, size_t argc, char **argv) {
+    if (argc == 3) {
+        const char *name = argv[1];
+        bool state_val = simple_strtou8(argv[2]) != 0; // Convert to boolean
+        set_relay_by_name(name, state_val);
+    } else {
+        shell_error(shell, "Invalid number of arguments for subcommand");
     }
-    if (strcmp(argv[1], "--set-bytes") == 0) {
-        if (argc == 3) {
-            uint8_t value = simple_strtou8(argv[2]);
+    return 0;
+}
+
+/**
+ * @brief Gets the state of relay &lt;name&gt;
+ *
+ * This command is useful to get state of a specific relay.
+ * This is a subcommand (level 1 command) array for command "relays".
+ *
+ * **Usage**\n
+ *     relays --get-relay &lt;name&gt; \n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments;
+ * @return Returns 0 on successful execution, or an error code on failure.
+ */
+static int cmd_relays_get_relay(const struct shell *shell, size_t argc, char **argv) {
+    if (argc == 2) {
+        const char *name = argv[1];
+        bool state = get_relay_by_name(name);
+        shell_print(shell, "%s state: %d", name, state);
+    } else {
+        shell_error(shell, "Invalid number of arguments for subcommand");
+    }
+    return 0;
+}
+
+/**
+ * @brief Sets the state of all relays &lt;name&gt; and &lt;state&gt;
+ *
+ * This command is useful to set all relay to a specific state.
+ * This is a subcommand (level 1 command) array for command "relays".
+ *
+ * **Usage**\n
+ *     relays --set-relays &lt;value&gt; \n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments;
+ * @return Returns 0 on successful execution, or an error code on failure.
+ */
+static int cmd_relays_set_relays(const struct shell *shell, size_t argc, char **argv) {
+   if (argc == 2) {
+            uint8_t value = simple_strtou8(argv[1]);
             set_relays(value);
-        } else {
-            shell_print(shell, "Invalid number of arguments for --bin-value");
-        }
-    } else if (strcmp(argv[1], "--set-relay") == 0) {
-        if (argc == 4) {
-            const char *name = argv[2];
-            bool state_val = simple_strtou8(argv[3]) != 0; // Convert to boolean
-            set_relay_by_name(name, state_val);
-        } else {
-            shell_print(shell, "Invalid number of arguments for -w");
-        }
-    } else if (strcmp(argv[1], "--get-relay") == 0) {
-        if (argc == 3) {
-            const char *name = argv[2];
-            bool state = get_relay_by_name(name);
-            shell_print(shell, "%s state: %d", name, state);
-        } else {
-            shell_print(shell, "Invalid number of arguments for -w");
-        }
-    } else if (strcmp(argv[1], "--list-relays") == 0) {
-        if (argc == 2) {
-            for (int i = 0; i <= 7; i++) {
-                shell_print(shell, "%s", get_relay_name(i));
-            }
-        } else {
-            shell_print(shell, "Invalid number of arguments for --get-relay-names");
+   } else {
+       shell_error(shell, "Invalid number of arguments for subcommand");
+   }
+    return 0;
+}
+
+/**
+ * @brief Lists names of all relays
+ *
+ * This command is useful to get names of all relays.
+ * This is a subcommand (level 1 command) array for command "relays".
+ *
+ * **Usage**\n
+ *     relays --list-relays \n
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments;
+ * @return Returns 0 on successful execution, or an error code on failure.
+ */
+static int cmd_relays_list_relays(const struct shell *shell, size_t argc, char **argv) {
+    if (argc == 1) {
+        for (int i = 0; i <= 7; i++) {
+            shell_print(shell, "%s", get_relay_name(i));
         }
     } else {
-        shell_print(shell, "Invalid command or number of arguments.");
+        shell_error(shell, "Invalid number of arguments for subcommand");
     }
     return 0;
 }
@@ -270,4 +327,18 @@ void relay_init() {
     printk("All relays configured and set to OFF!\n");
 }
 
-SHELL_CMD_REGISTER(relays, NULL, "control relays of pico. Execute without arguments to get more info", cmd_relays);
+/* Creating subcommands (level 1 command) array for command "relays". */
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_relays,
+                               SHELL_CMD(set-relays, NULL, "Set relays via Byte <value[0..255]>.",
+                                         cmd_relays_set_relays),
+                               SHELL_CMD(get-relay, NULL, "Get relay state of relay <name>.",
+                                         cmd_relays_get_relay),
+                               SHELL_CMD(set-relay, NULL, "Set relay state of relay <name> <state[1||0]>.",
+                                         cmd_relays_set_relay),
+                               SHELL_CMD(list-relays, NULL, "List all relay names.",
+                                         cmd_relays_list_relays),
+                               SHELL_SUBCMD_SET_END
+);
+
+/* Creating root (level 0) command "relays" */
+SHELL_CMD_REGISTER(relays, &sub_relays, "control relays of pico.", cmd_relays);
