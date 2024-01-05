@@ -48,11 +48,7 @@ typedef struct {
 
 // Function declarations
 void motordriver_init();
-motor_t motordriver_get_motor1();
-motor_t motordriver_get_motor2();
-void motordriver_set_dir(motor_t* motor, bool dir);
-void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed);
-void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed);
+
 
 
 #endif //APP_MOTORDRIVER_H

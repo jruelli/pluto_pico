@@ -47,6 +47,9 @@ void init_motor(motor_t* motor);
 void set_speed(motor_t* motor, uint32_t speed_percent);
 void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id);
 void set_motors(motor_t *motor1, motor_t *motor2, uint32_t speed1, uint32_t speed2, bool dir1, bool dir2);
+void motordriver_set_dir(motor_t* motor, bool dir);
+void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed);
+void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed);
 
 static const struct pwm_dt_spec pwm_1 = PWM_DT_SPEC_GET_OR(PWM_1, {0});
 static const struct pwm_dt_spec pwm_2 = PWM_DT_SPEC_GET_OR(PWM_2, {0});
@@ -572,39 +575,6 @@ void set_motors(motor_t *m1, motor_t *m2, uint32_t speed1, uint32_t speed2, bool
 void motordriver_init() {
     init_motor(&motor1);
     init_motor(&motor2);
-}
-
-/**
- * @brief Retrieves the current state of motor1.
- *
- * Provides the current state of motor1, including its direction, speed, and other
- * configuration parameters.
- *
- * **Usage**
- * ```
- * motor_t motorState = motordriver_get_motor1(); // Get current state of motor1
- * ```
- *
- * @return The motor1 structure with its current state.
- */
-motor_t motordriver_get_motor1() {
-    return motor1;
-}
-
-/**
- * @brief Retrieves the current state of motor2.
- *
- * Similar to `motordriver_get_motor1`, provides the current state of motor2.
- *
- * **Usage**
- * ```
- * motor_t motorState = motordriver_get_motor2(); // Get current state of motor2
- * ```
- *
- * @return The motor2 structure with its current state.
- */
-motor_t motordriver_get_motor2() {
-    return motor2;
 }
 
 SHELL_CMD_REGISTER(motor1, NULL,
