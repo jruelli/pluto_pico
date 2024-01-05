@@ -192,7 +192,7 @@ const char* get_relay_name(int relay_number) {
  * @return Returns 0 on success, or an error code on failure.
  */
 static int cmd_relays(const struct shell *shell, size_t argc, char **argv) {
-    shell_print(shell, "Invalid subcommand or number of arguments.");
+    shell_error(shell, "Invalid subcommand or number of arguments.");
     return 0;
 }
 
@@ -216,7 +216,7 @@ static int cmd_relays_set_relay(const struct shell *shell, size_t argc, char **a
         bool state_val = simple_strtou8(argv[2]) != 0; // Convert to boolean
         set_relay_by_name(name, state_val);
     } else {
-        shell_print(shell, "Invalid number of arguments for subcommand");
+        shell_error(shell, "Invalid number of arguments for subcommand");
     }
     return 0;
 }
@@ -241,7 +241,7 @@ static int cmd_relays_get_relay(const struct shell *shell, size_t argc, char **a
         bool state = get_relay_by_name(name);
         shell_print(shell, "%s state: %d", name, state);
     } else {
-        shell_print(shell, "Invalid number of arguments for subcommand");
+        shell_error(shell, "Invalid number of arguments for subcommand");
     }
     return 0;
 }
@@ -265,7 +265,7 @@ static int cmd_relays_set_relays(const struct shell *shell, size_t argc, char **
             uint8_t value = simple_strtou8(argv[1]);
             set_relays(value);
    } else {
-       shell_print(shell, "Invalid number of arguments for subcommand");
+       shell_error(shell, "Invalid number of arguments for subcommand");
    }
     return 0;
 }
@@ -290,7 +290,7 @@ static int cmd_relays_list_relays(const struct shell *shell, size_t argc, char *
             shell_print(shell, "%s", get_relay_name(i));
         }
     } else {
-        shell_print(shell, "Invalid number of arguments for subcommand");
+        shell_error(shell, "Invalid number of arguments for subcommand");
     }
     return 0;
 }
