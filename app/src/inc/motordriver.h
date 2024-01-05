@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Jannis Ruellmann 2023
+ * Copyright (c) Jannis Ruellmann 2024
  *
  * SPDX-License-Identifier: Apache-2.0
  */
