@@ -98,7 +98,7 @@ static int cmd_version(const struct shell *sh, size_t argc, char **argv) {
  *
  * @param shell Pointer to the shell structure.
  * @param argc Number of arguments.
- * @param argv Array of arguments; argv[1] can be "--build-ver" to display build version.
+ * @param argv Array of arguments;
  * @return Returns 0 on successful execution, or an error code on failure.
  */
 static int cmd_version_build_ver(const struct shell *sh, size_t argc,
