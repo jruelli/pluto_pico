@@ -15,8 +15,12 @@
 
 #include <sys/cdefs.h>
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include "inc/user_led.h"
+
+/* Enable logging for module. Change Log Level for debugging. */
+LOG_MODULE_REGISTER(user_led, LOG_LEVEL_INF);
 
 static struct k_thread user_led_thread_data;
 K_THREAD_STACK_DEFINE(user_led_stack_area, USER_LED_STACK_SIZE);
@@ -37,7 +41,7 @@ void user_led_init(void) {
     }
 
     gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
-
+    LOG_INF("Starting LED thread");
     k_tid_t led_tid = k_thread_create(&user_led_thread_data, user_led_stack_area,
                                       K_THREAD_STACK_SIZEOF(user_led_stack_area),
                                       (k_thread_entry_t)user_led_thread,
@@ -57,5 +61,6 @@ _Noreturn void user_led_thread(void) {
     while (1) {
         gpio_pin_toggle_dt(&led);
         k_sleep(K_MSEC(USER_LED_SLEEP_TIME_MS));
+        LOG_DBG("Toggling user LED");
     }
 }

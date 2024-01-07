@@ -37,6 +37,7 @@
 #include <zephyr/shell/shell.h>
 #include "inc/usb_cli.h"
 
+/* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(usb_cli, LOG_LEVEL_INF);
 
 /**

@@ -33,11 +33,14 @@
 
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/pwm.h>
-#include <zephyr/sys/printk.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 
 #include "inc/motordriver.h"
+
+/* Enable logging for module. Change Log Level for debugging. */
+LOG_MODULE_REGISTER(motordriver, LOG_LEVEL_INF);
 
 static const struct pwm_dt_spec pwm_1 = PWM_DT_SPEC_GET_OR(PWM_1, {0});
 static const struct pwm_dt_spec pwm_2 = PWM_DT_SPEC_GET_OR(PWM_2, {0});
@@ -110,7 +113,7 @@ void motordriver_set_dir(motor_t* motor, bool dir) {
         motordriver_adjust_motor_speed_blocking(motor, target_speed);
         motor->direction = dir;
         gpio_pin_set(motor->dir_pin.port, motor->dir_pin.pin,motor->direction);
-        printk("Direction of %s set to %d\n", motor->name, motor->direction);
+        LOG_DBG("Direction of %s set to %d\n", motor->name, motor->direction);
     }
     k_mutex_unlock(motor->mutex);
 }
@@ -139,12 +142,13 @@ void set_speed(motor_t* motor, uint32_t speed_percent) {
     // Calculate the duty cycle based on the speed percentage
     uint32_t duty_cycle_ns = motor->pwm_spec.period * speed_percent / 100;
     // Set the PWM duty cycle
+    LOG_DBG("Setting duty_cycle_ns for %s: %d", motor->name, duty_cycle_ns);
     int ret = pwm_set(motor->pwm_spec.dev,
                       motor->pwm_spec.channel,
                       motor->pwm_spec.period,
                       duty_cycle_ns, motor->pwm_spec.flags);
     if (ret < 0) {
-        printk("Error setting PWM speed for %s: %d\n", motor->name, ret);
+        LOG_ERR("Error setting PWM speed for %s: %d", motor->name, ret);
     } else {
         // Update the motors speed in the struct
         motor->speed = speed_percent;
@@ -168,7 +172,7 @@ void set_speed(motor_t* motor, uint32_t speed_percent) {
  */
 void init_motor(motor_t* motor) {
     if (!device_is_ready(motor->pwm_spec.dev)) {
-        printk("%s Error: PWM not ready.\n", motor->name);
+        LOG_ERR("%s Error: PWM not ready.", motor->name);
         return;
     }
     // Initialize GPIO pins as outputs for direction and PWM
@@ -180,7 +184,7 @@ void init_motor(motor_t* motor) {
     bool initial_direction = 0;
     uint32_t initial_speed = 0;
     motordriver_set_dir(motor, initial_direction);
-    printk("%s configured!\n", motor->name);
+    LOG_INF("%s configured!", motor->name);
     motordriver_adjust_motor_speed_blocking(motor, initial_speed);
 }
 
@@ -203,7 +207,7 @@ void init_motor(motor_t* motor) {
  */
 void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed) {
     if (motor->acceleration_rate == 0) {
-        printk("Rate of speed change cannot be zero.\n");
+        LOG_ERR("Rate of speed change cannot be zero.");
         return;
     }
     // Ensure target speed is within bounds
@@ -225,7 +229,7 @@ void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_spe
             k_msleep(motor->braking_rate_delay);
         }
     }
-    printk("%s target speed: %d reached.\n", motor->name, motor->speed);
+    LOG_DBG("%s target speed: %d reached.", motor->name, motor->speed);
 }
 
 /**
@@ -264,7 +268,7 @@ void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id) {
             k_timer_start(timer_id, K_MSEC(motor->braking_rate_delay), K_NO_WAIT);
         }
     } else {
-        printk("%s target speed: %d reached.\n", motor->name, motor->speed);
+        LOG_DBG("%s target speed: %d reached.", motor->name, motor->speed);
     }
 
     k_mutex_unlock(motor->mutex);
@@ -288,7 +292,7 @@ void motor_speed_adjust_timer_expiry_function(struct k_timer *timer_id) {
  */
 void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed) {
     if (motor->acceleration_rate == 0 || motor->braking_rate == 0) {
-        printk("Rate of speed change cannot be zero.\n");
+        LOG_ERR("Rate of speed change cannot be zero.");
         return;
     }
     k_mutex_lock(motor->mutex, K_FOREVER);
@@ -348,7 +352,9 @@ void set_motors(motor_t *m1, motor_t *m2, uint32_t speed1, uint32_t speed2, bool
 void motordriver_init() {
     init_motor(&motor1);
     init_motor(&motor2);
+    LOG_INF("All motors configured and set to OFF!");
     cmd_motor1_init();
     cmd_motor2_init();
     cmd_motors_init();
+    LOG_INF("All motordriver commands added!");
 }

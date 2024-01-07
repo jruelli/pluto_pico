@@ -19,9 +19,13 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/device.h>
+#include <zephyr/logging/log.h>
 
 #include "inc/motordriver.h"
 #include "inc/usb_cli.h"
+
+/* Enable logging for module. Change Log Level for debugging. */
+LOG_MODULE_REGISTER(motor1_cmds, LOG_LEVEL_INF);
 
 /**
  * @brief Root command function for motor1.
@@ -146,7 +150,7 @@ static int cmd_motor1_config_brak_rate_delay(const struct shell *shell, size_t a
 }
 
 void cmd_motor1_init() {
-    printk("Adding motor1 commands..\n");
+    LOG_INF("Adding motor1 commands.");
 }
 
 
