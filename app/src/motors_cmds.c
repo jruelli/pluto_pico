@@ -18,9 +18,14 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/device.h>
+#include <zephyr/logging/log.h>
+
 
 #include "inc/motordriver.h"
 #include "inc/usb_cli.h"
+
+/* Enable logging for module. Change Log Level for debugging. */
+LOG_MODULE_REGISTER(motors_cmds, LOG_LEVEL_INF);
 
 /**
  * @brief Root command function for motor2.
@@ -61,7 +66,7 @@ static int cmd_motors_set(const struct shell *shell, size_t argc, char **argv) {
 }
 
 void cmd_motors_init() {
-    printk("Adding motors commands..\n");
+    LOG_INF("Adding motors commands.");
 }
 
 /* Creating subcommands (level 1 command) array for command "motors". */
