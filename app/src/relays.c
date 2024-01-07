@@ -34,12 +34,15 @@
 
 #include <zephyr/drivers/gpio.h>
 #include <devicetree_generated.h>
-#include <zephyr/sys/printk.h>
 #include <zephyr/shell/shell.h>
+#include <zephyr/logging/log.h>
 #include <string.h>
 
 #include "inc/relays.h"
 #include "inc/usb_cli.h"
+
+/* Enable logging for module. Change Log Level for debugging. */
+LOG_MODULE_REGISTER(relays, LOG_LEVEL_INF);
 
 static const struct gpio_dt_spec relay_0 = GPIO_DT_SPEC_GET_OR(RELAY_0, gpios, {0});
 static const struct gpio_dt_spec relay_1 = GPIO_DT_SPEC_GET_OR(RELAY_1, gpios,{0});
@@ -69,6 +72,7 @@ const char* get_relay_name(int relay_number);
  * @param value An 8-bit value where each bit represents the state of a relay.
  */
 void set_relays(uint8_t value) {
+    LOG_DBG("Setting relays to: %d.", value);
     gpio_pin_set(relay_0.port, relay_0.pin, value & 0x01);
     gpio_pin_set(relay_1.port, relay_1.pin, (value >> 1) & 0x01);
     gpio_pin_set(relay_2.port, relay_2.pin, (value >> 2) & 0x01);
@@ -94,7 +98,7 @@ void set_relays(uint8_t value) {
  * @param state The desired state of the relay (true for ON, false for OFF).
  */
 void set_relay_by_name(const char *name, bool state) {
-    printk("Setting relay: %s to state: %u\n", name, (uint8_t)state);
+    LOG_DBG("Setting relay: %s to state: %u\n", name, (uint8_t)state);
     if (strcmp(name, "relay_0") == 0) {
         gpio_pin_set(relay_0.port, relay_0.pin, state);
     } else if (strcmp(name, "relay_1") == 0) {
@@ -112,7 +116,7 @@ void set_relay_by_name(const char *name, bool state) {
     } else if (strcmp(name, "relay_7") == 0) {
         gpio_pin_set(relay_7.port, relay_7.pin, state);
     } else {
-        printk("relay not known.\n");
+        LOG_ERR("relay not known.");
     }
 }
 
@@ -148,7 +152,7 @@ bool get_relay_by_name(const char *name) {
     } else if (strcmp(name, "relay_7") == 0) {
         state = gpio_pin_get(relay_7.port, relay_7.pin);
     } else {
-        printk("relay not known.\n");
+        LOG_ERR("relay not known.");
     }
     return state;
 }
@@ -324,7 +328,7 @@ void relay_init() {
     gpio_pin_set(relay_5.port, relay_5.pin, 0);
     gpio_pin_set(relay_6.port, relay_6.pin, 0);
     gpio_pin_set(relay_7.port, relay_7.pin, 0);
-    printk("All relays configured and set to OFF!\n");
+    LOG_INF("All relays configured and set to OFF!");
 }
 
 /* Creating subcommands (level 1 command) array for command "relays". */
