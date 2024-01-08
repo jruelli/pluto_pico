@@ -5,7 +5,18 @@ stages:
   - test
 
 before_script:
-  - west update
+  - export ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb
+  - export GNUARMEMB_TOOLCHAIN_PATH=/opt/gcc-arm-none-eabi-9-2020-q2-update
+  - |
+    if [ ! -d "$CI_PROJECT_DIR/zephyrproject" ]; then
+      mkdir -p $CI_PROJECT_DIR/zephyrproject
+      cd $CI_PROJECT_DIR/zephyrproject
+      west init
+      west update
+      west zephyr-export
+    fi
+  - source $CI_PROJECT_DIR/zephyrproject/zephyr/zephyr-env.sh
+  - cd $CI_PROJECT_DIR/app
 
 build:
   stage: build
