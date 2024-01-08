@@ -16,4 +16,4 @@ build:
     - west twister -T app -v --inline-logs --integration
   artifacts:
     paths:
-      - app/build/
+      - twister-out/
