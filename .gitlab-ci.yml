@@ -13,7 +13,7 @@ before_script:
 build:
   stage: build
   script:
-    - west twister -T app -p rpi_pico -v --inline-logs --integration
+    - west twister -T app -v --inline-logs --integration
   artifacts:
     paths:
       - app/build/
