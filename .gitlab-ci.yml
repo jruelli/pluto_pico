@@ -1,0 +1,22 @@
+image: zephyrprojectrtos/ci:latest
+
+stages:
+  - build
+  - test
+
+before_script:
+  - west update
+
+build:
+  stage: build
+  script:
+    - west build -b rpi_pico app
+  artifacts:
+    paths:
+      - app/build/
+
+test:
+  stage: test
+  script:
+    - echo "Running tests"
+    # Add your testing commands here
