@@ -1,0 +1,23 @@
+image: ghcr.io/zephyrproject-rtos/ci:v0.26.2
+
+stages:
+  - build
+
+variables:
+  CMAKE_PREFIX_PATH: "/opt/toolchains"
+
+before_script:
+  - west init -l .
+  - west update -o=--depth=1 -n
+
+build:
+  stage: build
+  script:
+    - west twister -T app -v --inline-logs --integration
+    # Copy zephyr.uf2 to root directory and name it rpi_pico.uf2
+    - find twister-out -name '*.uf2' -exec cp {} rpi_pico.uf2 \;
+  artifacts:
+    paths:
+      - twister-out/
+      - rpi_pico.uf2
+    expire_in: 1 week
