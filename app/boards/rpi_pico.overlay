@@ -36,6 +36,14 @@
     };
 };
 
+&i2c0 {
+    status = "okay";
+    pinctrl-0 = <&my_i2c0_pinctrl>;
+    pinctrl-names = "default";
+    clock-frequency = <100000>;
+};
+
+
 / {
     gpio_keys {
         compatible = "gpio-keys";
@@ -105,4 +113,12 @@
                      <PWM_7B_P15>;
         };
     };
+    my_i2c0_pinctrl: my_i2c0_pinctrl {
+        group1 {
+            pinmux = <I2C0_SDA_P16>, <I2C0_SCL_P17>;
+            input-enable;
+            input-schmitt-enable;
+        };
+    };
 };
+
