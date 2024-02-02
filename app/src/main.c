@@ -26,6 +26,7 @@
 #include "inc/user_led.h"
 #include "inc/relays.h"
 #include "inc/motordriver.h"
+#include "inc/vl53l0x.h"
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -51,5 +52,7 @@ int main(void) {
     relay_init();
     /* Init motordriver */
     motordriver_init();
+    /* Init vl53l0x*/
+    vl53l0x_test();
     return 0;
 }

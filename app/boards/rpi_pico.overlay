@@ -37,12 +37,15 @@
 };
 
 &i2c0 {
-    status = "okay";
     pinctrl-0 = <&my_i2c0_pinctrl>;
+    status = "okay";
     pinctrl-names = "default";
     clock-frequency = <100000>;
+    examplesensor: examplesensor@29 {
+        compatible = "st,vl53l0x";
+        reg = <0x29>;
+    };
 };
-
 
 / {
     gpio_keys {
