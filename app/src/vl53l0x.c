@@ -68,7 +68,7 @@ int vl53l0x_test(void)
         ret = sensor_channel_get(dev,
                                  SENSOR_CHAN_DISTANCE,
                                  &value);
-        LOG_INF("distance is %.3fm", sensor_value_to_double(&value));
+        printk("Raw distance value: %d.%06d\n", value.val1, value.val2);
         k_sleep(K_MSEC(1000));
     }
     return 0;
