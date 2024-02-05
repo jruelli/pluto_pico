@@ -32,9 +32,7 @@
  * @author Jannis Ruellmann
  */
 
-#include <zephyr/drivers/i2c.h>
 #include <devicetree_generated.h>
-#include <zephyr/shell/shell.h>
 #include <zephyr/logging/log.h>
 #include <string.h>
 #include <zephyr/kernel.h>
@@ -49,26 +47,37 @@ LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_INF);
 
 int vl53l0x_test(void)
 {
-    const struct device *const dev = DEVICE_DT_GET_ONE(st_vl53l0x);
-    struct sensor_value value;
+    const struct device *vl53l0x_0 = DEVICE_DT_GET(DT_NODELABEL(vl53l0x_0));
     int ret;
-    if (!device_is_ready(dev)) {
+    if (!device_is_ready(vl53l0x_0)) {
         LOG_ERR("sensor: device not ready.");
         return 0;
     }
     LOG_INF("vl53l0x is configured");
+    struct sensor_value prox_value;
+    struct sensor_value dist_value;
+    struct sensor_value value;
+
     while (1) {
-        ret = sensor_sample_fetch(dev);
+        ret = sensor_sample_fetch(vl53l0x_0);
         if (ret) {
             LOG_ERR("sensor_sample_fetch failed ret %d", ret);
-            return 0;
         }
-        ret = sensor_channel_get(dev, SENSOR_CHAN_PROX, &value);
-        LOG_INF("prox is %d", value.val1);
-        ret = sensor_channel_get(dev,
+        ret = sensor_channel_get(vl53l0x_0, SENSOR_CHAN_PROX, &prox_value);
+        if (ret) {
+            LOG_ERR("sensor_sample_fetch failed for SENSOR_CHAN_PROX ret %d", ret);
+        } else {
+            //LOG_INF("prox is %d", prox_value.val1);
+        }
+        ret = sensor_channel_get(vl53l0x_0,
                                  SENSOR_CHAN_DISTANCE,
-                                 &value);
-        printk("Raw distance value: %d.%06d\n", value.val1, value.val2);
+                                 &dist_value);
+        if (ret) {
+          LOG_ERR("sensor_sample_fetch failed for SENSOR_CHAN_DISTANCE ret %d", ret);
+        } else {
+          uint32_t distance_mm = (dist_value.val1 * 1000) + (dist_value.val2 / 1000);
+          LOG_INF("raw dis value: %d", distance_mm);
+        }
         k_sleep(K_MSEC(1000));
     }
     return 0;
