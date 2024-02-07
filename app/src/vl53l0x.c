@@ -40,10 +40,29 @@
 #include <zephyr/drivers/sensor.h>
 #include <stdio.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/gpio.h>
 #include "inc/vl53l0x.h"
+#include "vl53l0x_types.h"
+#include "vl53l0x_api.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_INF);
+
+#define VL53L0X_REG_WHO_AM_I                    0xC0
+#define VL53L0X_CHIP_ID                         0xEEAA
+
+
+struct vl53l0x_config {
+    struct i2c_dt_spec i2c;
+    struct gpio_dt_spec xshut;
+};
+
+struct vl53l0x_data {
+    bool started;
+    VL53L0X_Dev_t vl53l0x;
+    VL53L0X_RangingMeasurementData_t RangingMeasurementData;
+};
 
 int vl53l0x_test(void)
 {
@@ -53,7 +72,16 @@ int vl53l0x_test(void)
         LOG_ERR("sensor: device not ready.");
         return 0;
     }
+
     LOG_INF("vl53l0x is configured");
+
+    struct vl53l0x_data *drv_data = vl53l0x_0->data;
+    uint8_t VhvSettings;
+    uint8_t PhaseCal;
+    uint32_t refSpadCount;
+    uint8_t isApertureSpads;
+    VL53L0X_DeviceInfo_t vl53l0x_dev_info = { 0 };
+
     struct sensor_value prox_value;
     struct sensor_value dist_value;
     struct sensor_value value;
@@ -76,7 +104,29 @@ int vl53l0x_test(void)
           LOG_ERR("sensor_sample_fetch failed for SENSOR_CHAN_DISTANCE ret %d", ret);
         } else {
           uint32_t distance_mm = (dist_value.val1 * 1000) + (dist_value.val2 / 1000);
-          LOG_INF("raw dis value: %d", distance_mm);
+          //LOG_INF("raw dis value: %d", distance_mm);
+        }
+        ret = VL53L0X_GetDeviceInfo(&drv_data->vl53l0x, &vl53l0x_dev_info);
+        if (ret < 0) {
+            LOG_ERR("[%s] Could not get info from device.", vl53l0x_0->name);
+            return -ENODEV;
+        }
+
+        LOG_INF("[%s] VL53L0X_GetDeviceInfo = %d", vl53l0x_0->name, ret);
+        LOG_INF("   Device Name : %s", vl53l0x_dev_info.Name);
+        LOG_INF("   Device Type : %s", vl53l0x_dev_info.Type);
+        LOG_INF("   Device ID : %s", vl53l0x_dev_info.ProductId);
+        LOG_INF("   ProductRevisionMajor : %d",
+                vl53l0x_dev_info.ProductRevisionMajor);
+        LOG_INF("   ProductRevisionMinor : %d",
+                vl53l0x_dev_info.ProductRevisionMinor);
+        uint16_t vl53l0x_id = 0U;
+        ret = VL53L0X_RdWord(&drv_data->vl53l0x,
+                             VL53L0X_REG_WHO_AM_I,
+                             &vl53l0x_id);
+        if ((ret < 0) || (vl53l0x_id != VL53L0X_CHIP_ID)) {
+            LOG_ERR("[%s] Issue on device identification", vl53l0x_0->name);
+            return -ENOTSUP;
         }
         k_sleep(K_MSEC(1000));
     }
