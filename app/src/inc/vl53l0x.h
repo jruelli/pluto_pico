@@ -5,10 +5,10 @@
 #ifndef APP_VL53L0X_H
 #define APP_VL53L0X_H
 
-enum proximity_state {
-    PROXIMITY_STATE_DISTANCE,
-    PROXIMITY_STATE_PROXIMITY,
-    PROXIMITY_STATE_OFF
+enum sensor_mode {
+    VL53L0X_MODE_DISTANCE,
+    VL53L0X_MODE_PROXIMITY,
+    VL53L0X_MODE_OFF
 };
 // Function declarations
 int vl53l0x_test(void);

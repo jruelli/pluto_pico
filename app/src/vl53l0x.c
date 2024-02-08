@@ -60,7 +60,7 @@ struct vl53l0x_config {
     struct i2c_dt_spec i2c;
     struct gpio_dt_spec xshut;
     uint16_t threshold;
-    enum proximity_state state;
+    enum sensor_mode mode;
 };
 
 struct vl53l0x_data {
@@ -70,7 +70,9 @@ struct vl53l0x_data {
 };
 uint8_t set_threshold_by_name(const char* name, uint16_t threshold);
 uint8_t get_threshold_by_name(const char* name);
-bool get_proxy_by_name(const char *name);
+enum sensor_mode get_mode_by_name(const char* name);
+uint8_t set_mode_by_name(const char* name, enum sensor_mode mode);
+const char* get_proxy_name(int proxy_number);
 
 struct vl53l0x_config vl53l0x_config_0;
 struct vl53l0x_data vl53l0x_data_0;
@@ -103,7 +105,7 @@ static int cmd_proxies_set_threshold(const struct shell *shell, size_t argc, cha
 }
 
 static int cmd_proxies_get_threshold(const struct shell *shell, size_t argc, char **argv) {
-    if (argc == 3) {
+    if (argc == 2) {
         const char *name = argv[1];
         uint16_t threshold = get_threshold_by_name(name);
         shell_print(shell, "%s state: %d", name, threshold);
@@ -111,6 +113,55 @@ static int cmd_proxies_get_threshold(const struct shell *shell, size_t argc, cha
         shell_error(shell, "Invalid number of arguments for subcommand");
     }
     return 0;
+}
+
+static int cmd_proxies_set_mode(const struct shell *shell, size_t argc, char **argv) {
+    if (argc == 3) {
+        const char *name = argv[1];
+        const char *mode = argv[2];
+        enum sensor_mode sensor_mode = VL53L0X_MODE_PROXIMITY;
+        if (strcmp(mode, "p") == 0) {
+            sensor_mode = VL53L0X_MODE_PROXIMITY;
+        } else if (strcmp(mode, "d") == 0) {
+            sensor_mode = VL53L0X_MODE_DISTANCE;
+        } else if (strcmp(mode, "d") == 0) {
+            sensor_mode = VL53L0X_MODE_OFF;
+        } else {
+            shell_error(shell, "mode not known.");
+        }
+        set_mode_by_name(name, sensor_mode);
+    } else {
+        shell_error(shell, "Invalid number of arguments for subcommand");
+    }
+    return 0;
+}
+
+static int cmd_proxies_get_mode(const struct shell *shell, size_t argc, char **argv) {
+    if (argc == 2) {
+        const char *name = argv[1];
+        enum sensor_mode mode = get_mode_by_name(name);
+        shell_print(shell, "%s state: %d", name, mode);
+    } else {
+        shell_error(shell, "Invalid number of arguments for subcommand");
+    }
+    return 0;
+}
+
+static int cmd_proxies_list_prox(const struct shell *shell, size_t argc, char **argv) {
+    for (int i = 0; i <= 7; i++) {
+        shell_print(shell, "%s", get_proxy_name(i));
+    }
+    return 0;
+}
+
+const char* get_proxy_name(int proxy_number) {
+    switch (proxy_number) {
+        case 0: return "proxy_0";
+        case 1: return "proxy_1";
+        case 2: return "proxy_2";
+        case 3: return "proxy_3";
+        default: return "Unknown";
+    }
 }
 
 uint8_t set_threshold_by_name(const char* name, uint16_t threshold) {
@@ -135,9 +186,31 @@ uint8_t get_threshold_by_name(const char* name) {
     return threshold;
 }
 
+uint8_t set_mode_by_name(const char* name, enum sensor_mode mode) {
+    LOG_DBG("Setting prox: %s to threshold: %u\n", name, threshold);
+    if (strcmp(name, "prox_0") == 0) {
+        vl53l0x_config_0.mode = mode;
+    } else {
+        LOG_ERR("prox sensor not known.");
+    }
+    // TODO Set mode for device
+    return 0;
+}
+
+enum sensor_mode get_mode_by_name(const char* name) {
+    LOG_DBG("Getting threshold: of prox sensor %u\n", name);
+    enum sensor_mode state = 0;
+    if (strcmp(name, "prox_0") == 0) {
+        state = vl53l0x_config_0.mode;
+    } else {
+        LOG_ERR("prox sensor not known.");
+    }
+    return state;
+}
+
 void vl53l0x_config_init() {
     vl53l0x_config_0.threshold = 100;
-    vl53l0x_config_0.state = PROXIMITY_STATE_PROXIMITY;
+    vl53l0x_config_0.mode = VL53L0X_MODE_PROXIMITY;
     vl53l0x_config_0.name = "prox_0";
     // TODO Set threshold for device
 }
@@ -151,14 +224,11 @@ int vl53l0x_test(void)
         return 0;
     }
 
-    LOG_INF("vl53l0x is configured");
-
     struct vl53l0x_data *drv_data = vl53l0x_0->data;
     VL53L0X_DeviceInfo_t vl53l0x_dev_info = { 0 };
 
     struct sensor_value prox_value;
     struct sensor_value dist_value;
-    struct sensor_value value;
 
     while (1) {
         ret = sensor_sample_fetch(vl53l0x_0);
@@ -180,6 +250,7 @@ int vl53l0x_test(void)
           uint32_t distance_mm = (dist_value.val1 * 1000) + (dist_value.val2 / 1000);
           //LOG_INF("raw dis value: %d", distance_mm);
         }
+        LOG_INF("vl53l0x is configured");
         ret = VL53L0X_GetDeviceInfo(&drv_data->vl53l0x, &vl53l0x_dev_info);
         if (ret < 0) {
             LOG_ERR("[%s] Could not get info from device.", vl53l0x_0->name);
@@ -214,18 +285,16 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_proxies,
                                SHELL_CMD(get-threshold, NULL, "Get current threshold of sensor <name>.",
                                          cmd_proxies_get_threshold),
                                //SHELL_CMD(get-prox-state, NULL, "Get current proximity state of sensor <name>.",
-                               //          cmd_proxies_set_prox_state),
-                               //SHELL_CMD(get-conf, NULL,
-                               //          "Get conf for sensor <name>.",
-                               //          cmd_proxies_get_prox_conf),
-                               //SHELL_CMD(set-conf, NULL,
-                               //          "Configure sensor <name> to distance (d) ,proximity measurement (p) "
-                               //          "or off (off) <[d||p||off]>.",
-                               //          cmd_proxies_set_prox_conf),
-                               //SHELL_CMD(get-details, NULL, "Get details of sensor <name>.",
-                               //          cmd_proxies_get_details),
-                               //SHELL_CMD(list-sensors, NULL, "List all sensors.",
-                               //          cmd_proxies_list_prox),
+                               //          cmd_proxies_get_prox_state),
+                               SHELL_CMD(get-mode, NULL,
+                                         "Get conf for sensor <name>.",
+                                         cmd_proxies_get_mode),
+                               SHELL_CMD(set-mode, NULL,
+                                         "Configure sensor <name> to distance (d) ,proximity measurement (p) "
+                                         "or off (off) <[d||p||off]>.",
+                                         cmd_proxies_set_mode),
+                               SHELL_CMD(list-sensors, NULL, "List all sensors.",
+                                         cmd_proxies_list_prox),
                                SHELL_SUBCMD_SET_END
 );
 
