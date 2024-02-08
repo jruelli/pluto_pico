@@ -62,8 +62,67 @@ struct vl53l0x_data {
     bool started;
     VL53L0X_Dev_t vl53l0x;
     VL53L0X_RangingMeasurementData_t RangingMeasurementData;
+uint8_t set_conf_prox_by_name(const char* name, uint16_t threshold);
+uint8_t get_conf_prox_by_name(const char* name);
+bool get_proxy_by_name(const char *name);
 };
 
+/**
+ * @brief Root command function for relays.
+ *
+ * This function is called if a wrong subcommand has been selected.
+ * This is a root command (level 0 command).
+ *
+ * @param shell Pointer to the shell structure.
+ * @param argc Number of arguments.
+ * @param argv Array of arguments.
+ * @return Returns 0 on success, or an error code on failure.
+ */
+static int cmd_proxies(const struct shell *shell, size_t argc, char **argv) {
+    shell_error(shell, "Invalid subcommand or number of arguments.");
+    return 0;
+}
+
+static int cmd_proxies_set_threshold(const struct shell *shell, size_t argc, char **argv) {
+    if (argc == 3) {
+        const char *name = argv[1];
+        uint8_t threshold = simple_strtou8(argv[2]) != 0; // Convert to boolean
+        set_conf_prox_by_name(name, threshold);
+    } else {
+        shell_error(shell, "Invalid number of arguments for subcommand");
+    }
+    return 0;
+}
+
+static int cmd_proxies_get_threshold(const struct shell *shell, size_t argc, char **argv) {
+    if (argc == 3) {
+        const char *name = argv[1];
+        get_conf_prox_by_name(name);
+    } else {
+        shell_error(shell, "Invalid number of arguments for subcommand");
+    }
+    return 0;
+}
+
+uint8_t set_conf_prox_by_name(const char* name, uint16_t threshold) {
+    LOG_DBG("Setting prox: %s to threshold: %u\n", name, threshold);
+    if (strcmp(name, "prox_0") == 0) {
+        vl53l0x_0->threshold_mm  = threshold;
+    } else {
+        LOG_ERR("prox sensor not known.");
+    }
+    return 0;
+}
+
+uint8_t get_conf_prox_by_name(const char* name) {
+    LOG_DBG("Getting threshold: of prox sensor %u\n", name);
+    if (strcmp(name, "prox_0") == 0) {
+        // Get threshold for vl53l0x_0
+    } else {
+        LOG_ERR("prox sensor not known.");
+    }
+    return 0;
+}
 int vl53l0x_test(void)
 {
     const struct device *vl53l0x_0 = DEVICE_DT_GET(DT_NODELABEL(vl53l0x_0));
@@ -132,3 +191,28 @@ int vl53l0x_test(void)
     }
     return 0;
 }
+
+/* Creating subcommands (level 1 command) array for command "proxies". */
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_proxies,
+                               SHELL_CMD(set-threshold, NULL, "Configure threshold for sensor <name> to <value[0..2000(mm)]>.",
+                                         cmd_proxies_set_threshold),
+                               SHELL_CMD(get-threshold, NULL, "Get current threshold of sensor <name>.",
+                                         cmd_proxies_get_threshold),
+                               SHELL_CMD(get-prox-state, NULL, "Get current proximity state of sensor <name>.",
+                                         cmd_proxies_set_prox_state),
+                               SHELL_CMD(get-conf, NULL,
+                                         "Get conf for sensor <name>.",
+                                         cmd_proxies_get_prox_conf),
+                               SHELL_CMD(set-conf, NULL,
+                                         "Configure sensor <name> to distance (d) ,proximity measurement (p) "
+                                         "or off (off) <[d||p||off]>.",
+                                         cmd_proxies_set_prox_conf),
+                               SHELL_CMD(get-details, NULL, "Get details of sensor <name>.",
+                                         cmd_proxies_get_details),
+                               SHELL_CMD(list-sensors, NULL, "List all sensors.",
+                                         cmd_proxies_list_prox),
+                               SHELL_SUBCMD_SET_END
+);
+
+/* Creating root (level 0) command "proxies" */
+SHELL_CMD_REGISTER(proxies, &sub_proxies, "control/configure proximity sensors.", cmd_proxies);
