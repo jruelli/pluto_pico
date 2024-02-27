@@ -160,7 +160,7 @@ static int cmd_proxies_get_mode(const struct shell *shell, size_t argc, char **a
 }
 
 static int cmd_proxies_list_prox(const struct shell *shell, size_t argc, char **argv) {
-    for (int i = 0; i <= 7; i++) {
+    for (int i = 0; i <= 3; i++) {
         shell_print(shell, "%s", get_proxy_name(i));
     }
     return 0;
@@ -168,27 +168,62 @@ static int cmd_proxies_list_prox(const struct shell *shell, size_t argc, char **
 
 const char* get_proxy_name(int proxy_number) {
     switch (proxy_number) {
-        case 0: return "proxy_0";
-        case 1: return "proxy_1";
-        case 2: return "proxy_2";
-        case 3: return "proxy_3";
+        case 0: return "prox_0";
+        case 1: return "prox_1";
+        case 2: return "prox_2";
+        case 3: return "prox_3";
         default: return "Unknown";
     }
 }
 
 uint8_t set_threshold_by_name(const char* name, uint16_t threshold) {
     LOG_DBG("Setting prox: %s to threshold: %u\n", name, threshold);
+    const struct device *vl53l0x;
+    bool dev_found = false;
     if (strcmp(name, "prox_0") == 0) {
+        vl53l0x = DEVICE_DT_GET(DT_NODELABEL(vl53l0x_0));
         vl53l0x_config_0.threshold = threshold;
+        dev_found = true;
     } else {
         LOG_ERR("prox sensor not known.");
     }
-    // TODO Set threshold for device
+    if (dev_found) {
+        struct vl53l0x_data *drv_data = vl53l0x->data;
+        VL53L0X_Error ret;
+        // Get thresholds:
+        FixPoint1616_t low;
+        FixPoint1616_t high;
+        ret = VL53L0X_GetInterruptThresholds(&drv_data->vl53l0x,
+                                             0, &low,
+                                             &high);
+        if (ret != VL53L0X_ERROR_NONE) {
+            LOG_ERR("Getting threshold VL53L0X Error: %d", ret);
+        }
+        LOG_INF("Low and high threshold are: %d %d", low, high);
+        // Define a new threshold:
+        low = (FixPoint1616_t)threshold;
+        // VL53L0X_SetInterruptThresholds(VL53L0X_DEV Dev,
+        //         VL53L0X_DeviceModes DeviceMode, FixPoint1616_t ThresholdLow,
+        //         FixPoint1616_t ThresholdHigh);
+        ret = VL53L0X_SetInterruptThresholds(&drv_data->vl53l0x, 0, low, high);
+        if (ret != VL53L0X_ERROR_NONE) {
+            LOG_ERR("Setting threshold VL53L0X Error: %d", ret);
+        }
+        // Verify: Get threshholds
+        ret = VL53L0X_GetInterruptThresholds(&drv_data->vl53l0x,
+                                             0, &low,
+                                             &high);
+        if (ret != VL53L0X_ERROR_NONE) {
+            LOG_ERR("Getting threshold VL53L0X Error: %d", ret);
+        }
+        LOG_INF("Low and high threshold are: %d %d", low, high);
+    }
+
     return 0;
 }
 
 uint8_t get_threshold_by_name(const char* name) {
-    LOG_DBG("Getting threshold: of prox sensor %u\n", name);
+    LOG_DBG("Getting threshold: of prox sensor %s\n", name);
     uint16_t threshold = 0;
     if (strcmp(name, "prox_0") == 0) {
         threshold = vl53l0x_config_0.threshold;
@@ -199,7 +234,7 @@ uint8_t get_threshold_by_name(const char* name) {
 }
 
 uint8_t set_mode_by_name(const char* name, enum sensor_mode mode) {
-    LOG_DBG("Setting prox: %s to threshold: %u\n", name, threshold);
+    LOG_DBG("Setting prox: %s to threshold: %u\n", name, mode);
     if (strcmp(name, "prox_0") == 0) {
         vl53l0x_config_0.mode = mode;
     } else {
@@ -210,7 +245,7 @@ uint8_t set_mode_by_name(const char* name, enum sensor_mode mode) {
 }
 
 enum sensor_mode get_mode_by_name(const char* name) {
-    LOG_DBG("Getting threshold: of prox sensor %u\n", name);
+    LOG_DBG("Getting threshold: of prox sensor %s\n", name);
     enum sensor_mode state = 0;
     if (strcmp(name, "prox_0") == 0) {
         state = vl53l0x_config_0.mode;
@@ -222,23 +257,34 @@ enum sensor_mode get_mode_by_name(const char* name) {
 
 uint32_t get_distance_by_name(const char* name) {
     const struct device *vl53l0x;
+    int ret;
+    bool dev_found = false;
+    uint32_t distance_mm = 0;
     if (strcmp(name, "prox_0") == 0) {
         vl53l0x = DEVICE_DT_GET(DT_NODELABEL(vl53l0x_0));
+        dev_found = true;
     } else {
         LOG_ERR("prox sensor not known.");
     }
-    int ret;
-    struct sensor_value dist_value;
-    uint32_t distance_mm = 0;
-    ret = sensor_channel_get(vl53l0x,
-                             SENSOR_CHAN_DISTANCE,
-                             &dist_value);
-    if (ret) {
-        LOG_ERR("sensor_sample_fetch failed for SENSOR_CHAN_DISTANCE ret %d", ret);
-    } else {
-        distance_mm = (dist_value.val1 * 1000) + (dist_value.val2 / 1000);
-        LOG_INF("raw dis value: %d", distance_mm);
+    if (dev_found) {
+        ret = sensor_sample_fetch(vl53l0x);
+        if (ret) {
+            LOG_ERR("sensor_sample_fetch failed ret %d", ret);
+        }
+        struct sensor_value dist_value;
+        ret = sensor_channel_get(vl53l0x,
+                                 SENSOR_CHAN_DISTANCE,
+                                 &dist_value);
+        if (ret) {
+            LOG_ERR("sensor_sample_fetch failed for SENSOR_CHAN_DISTANCE ret %d", ret);
+        } else {
+            distance_mm = (dist_value.val1 * 1000) + (dist_value.val2 / 1000);
+            if (distance_mm > 1700) {
+                distance_mm = 1700;
+            }
+        }
     }
+
     return distance_mm;
 }
 
@@ -264,51 +310,45 @@ int vl53l0x_test(void)
     struct sensor_value prox_value;
     struct sensor_value dist_value;
 
-    while (1) {
-        ret = sensor_sample_fetch(vl53l0x_0);
-        if (ret) {
-            LOG_ERR("sensor_sample_fetch failed ret %d", ret);
-        }
-        ret = sensor_channel_get(vl53l0x_0, SENSOR_CHAN_PROX, &prox_value);
-        if (ret) {
-            LOG_ERR("sensor_sample_fetch failed for SENSOR_CHAN_PROX ret %d", ret);
-        } else {
-            //LOG_INF("prox is %d", prox_value.val1);
-        }
-        ret = sensor_channel_get(vl53l0x_0,
-                                 SENSOR_CHAN_DISTANCE,
-                                 &dist_value);
-        if (ret) {
-          LOG_ERR("sensor_sample_fetch failed for SENSOR_CHAN_DISTANCE ret %d", ret);
-        } else {
-          uint32_t distance_mm = (dist_value.val1 * 1000) + (dist_value.val2 / 1000);
-          //LOG_INF("raw dis value: %d", distance_mm);
-        }
-        LOG_INF("vl53l0x is configured");
-        ret = VL53L0X_GetDeviceInfo(&drv_data->vl53l0x, &vl53l0x_dev_info);
-        if (ret < 0) {
-            LOG_ERR("[%s] Could not get info from device.", vl53l0x_0->name);
-            return -ENODEV;
-        }
-
-        LOG_INF("[%s] VL53L0X_GetDeviceInfo = %d", vl53l0x_0->name, ret);
-        LOG_INF("   Device Name : %s", vl53l0x_dev_info.Name);
-        LOG_INF("   Device Type : %s", vl53l0x_dev_info.Type);
-        LOG_INF("   Device ID : %s", vl53l0x_dev_info.ProductId);
-        LOG_INF("   ProductRevisionMajor : %d",
-                vl53l0x_dev_info.ProductRevisionMajor);
-        LOG_INF("   ProductRevisionMinor : %d",
-                vl53l0x_dev_info.ProductRevisionMinor);
-        uint16_t vl53l0x_id = 0U;
-        ret = VL53L0X_RdWord(&drv_data->vl53l0x,
-                             VL53L0X_REG_WHO_AM_I,
-                             &vl53l0x_id);
-        if ((ret < 0) || (vl53l0x_id != VL53L0X_CHIP_ID)) {
-            LOG_ERR("[%s] Issue on device identification", vl53l0x_0->name);
-            return -ENOTSUP;
-        }
-        k_sleep(K_MSEC(1000));
+    ret = sensor_sample_fetch(vl53l0x_0);
+    if (ret) {
+        LOG_ERR("sensor_sample_fetch failed ret %d", ret);
     }
+    ret = sensor_channel_get(vl53l0x_0,
+                             SENSOR_CHAN_DISTANCE,
+                             &dist_value);
+    if (ret) {
+        LOG_ERR("sensor_sample_fetch failed for SENSOR_CHAN_DISTANCE ret %d", ret);
+    } else {
+        uint32_t distance_mm = (dist_value.val1 * 1000) + (dist_value.val2 / 1000);
+        LOG_INF("raw dis value: %d", distance_mm);
+    }
+    LOG_INF("vl53l0x is configured");
+    ret = VL53L0X_GetDeviceInfo(&drv_data->vl53l0x, &vl53l0x_dev_info);
+    if (ret < 0) {
+        LOG_ERR("[%s] Could not get info from device.", vl53l0x_0->name);
+        return -ENODEV;
+    }
+    LOG_INF("[%s] VL53L0X_GetDeviceInfo = %d", vl53l0x_0->name, ret);
+    LOG_INF("   Device Name : %s", vl53l0x_dev_info.Name);
+    LOG_INF("   Device Type : %s", vl53l0x_dev_info.Type);
+    LOG_INF("   Device ID : %s", vl53l0x_dev_info.ProductId);
+    LOG_INF("   ProductRevisionMajor : %d",
+            vl53l0x_dev_info.ProductRevisionMajor);
+    LOG_INF("   ProductRevisionMinor : %d",
+            vl53l0x_dev_info.ProductRevisionMinor);
+    uint16_t vl53l0x_id = 0U;
+    ret = VL53L0X_RdWord(&drv_data->vl53l0x,
+                         VL53L0X_REG_WHO_AM_I,
+                         &vl53l0x_id);
+    if ((ret < 0) || (vl53l0x_id != VL53L0X_CHIP_ID)) {
+        LOG_ERR("[%s] Issue on device identification", vl53l0x_0->name);
+        return -ENOTSUP;
+    }
+    VL53L0X_SetGpioConfig(&drv_data->vl53l0x, 0, 0,
+                          VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_LEVEL_LOW,
+                          VL53L0X_INTERRUPTPOLARITY_LOW);
+    k_sleep(K_MSEC(1000));
     return 0;
 }
 
