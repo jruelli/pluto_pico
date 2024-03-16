@@ -38,15 +38,13 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
-#include <stdio.h>
 #include <zephyr/sys/printk.h>
-#include <zephyr/drivers/i2c.h>
-#include <zephyr/drivers/gpio.h>
 #include <zephyr/shell/shell.h>
 #include "inc/vl53l0x.h"
 #include "vl53l0x_types.h"
 #include "vl53l0x_api.h"
 #include "inc/usb_cli.h"
+#include "inc/motordriver.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_INF);
@@ -335,10 +333,10 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             }
             if (vl53l0x_sensors[i].distance_mm > vl53l0x_sensors[i].threshold) {
                 vl53l0x_sensors[i].is_proxy = true;
+                motordriver_stop_motors();
             } else {
                 vl53l0x_sensors[i].is_proxy = false;
             }
-            // TODO have some action to detected proximity
         }
     }
 }

@@ -336,6 +336,16 @@ void set_motors(motor_t *m1, motor_t *m2, uint32_t speed1, uint32_t speed2, bool
     motordriver_adjust_motor_speed_non_blocking(m2, speed2);
 }
 
+/**
+ * @brief Stops both motors by gradually reducing their speed to zero.
+ */
+void motordriver_stop_motors() {
+    // Set the speed of both motors to zero
+    motordriver_adjust_motor_speed_non_blocking(&motor1, 0);
+    motordriver_adjust_motor_speed_non_blocking(&motor2, 0);
+
+    LOG_DBG("Both motors are stopping.");
+}
 
 /**
  * @brief Initializes the motor driver module.
