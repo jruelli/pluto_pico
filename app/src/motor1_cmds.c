@@ -25,7 +25,7 @@
 #include "inc/usb_cli.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(motor1_cmds, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(motor1_cmds, LOG_LEVEL_WRN);
 
 /**
  * @brief Root command function for motor1.

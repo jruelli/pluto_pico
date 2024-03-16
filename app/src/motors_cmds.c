@@ -25,7 +25,7 @@
 #include "inc/usb_cli.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(motors_cmds, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(motors_cmds, LOG_LEVEL_WRN);
 
 /**
  * @brief Root command function for motor2.
@@ -57,16 +57,16 @@ static int cmd_motors_set(const struct shell *shell, size_t argc, char **argv) {
         speed_motor2 = (speed_motor2 > 100) ? 100 : speed_motor2;
 
         set_motors(&motor1, &motor2, speed_motor1, speed_motor2, dir_motor1, dir_motor2);
-        shell_print(shell, "Motors set: Motor1 - Speed %d, Direction %d; Motor2 - Speed %d, Direction %d",
+        LOG_DBG("Motors set: Motor1 - Speed %d, Direction %d; Motor2 - Speed %d, Direction %d",
                     speed_motor1, dir_motor1, speed_motor2, dir_motor2);
     } else {
-        shell_error(shell, "Usage: motors set <speed_motor1> <dir_motor1> <speed_motor2> <dir_motor2>");
+        LOG_ERR("Usage: motors set <speed_motor1> <dir_motor1> <speed_motor2> <dir_motor2>");
     }
     return 0;
 }
 
 void cmd_motors_init() {
-    LOG_INF("Adding motors commands.");
+    LOG_DBG("Adding motors commands.");
 }
 
 /* Creating subcommands (level 1 command) array for command "motors". */
