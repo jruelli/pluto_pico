@@ -76,6 +76,7 @@ uint32_t get_distance_by_name(const char* name);
 enum sensor_mode get_mode_by_name(const char* name);
 uint8_t set_mode_by_name(const char* name, enum sensor_mode mode);
 const char* get_proxy_name(int proxy_number);
+uint32_t get_is_proxy_state_by_name(const char* name);
 
 // Define configurations and data for each sensor
 struct vl53l0x vl53l0x_sensors[NUM_SENSORS] = {
@@ -128,6 +129,18 @@ static int cmd_proxy_get_distance(const struct shell *shell, size_t argc, char *
         const char *name = argv[1];
         uint32_t distance = get_distance_by_name(name);
         shell_print(shell, "%s distance: %d", name, distance);
+    } else {
+        shell_error(shell, "Invalid number of arguments for subcommand");
+    }
+    return 0;
+}
+
+
+static int cmd_proxy_get_proxy_state(const struct shell *shell, size_t argc, char **argv) {
+    if (argc == 2) {
+        const char *name = argv[1];
+        bool is_proxy = get_is_proxy_state_by_name(name);
+        shell_print(shell, "%s is_proxy: %d", name, is_proxy);
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
     }
@@ -279,6 +292,22 @@ uint32_t get_distance_by_name(const char* name) {
     return distance_mm;
 }
 
+uint32_t get_is_proxy_state_by_name(const char* name) {
+    bool is_proxy = 0;
+    if (strcmp(name, "prox_0") == 0) {
+        is_proxy = vl53l0x_sensors[0].is_proxy;
+    } else if (strcmp(name, "prox_1") == 0) {
+        is_proxy = vl53l0x_sensors[1].is_proxy;
+    } else if (strcmp(name, "prox_2") == 0) {
+        is_proxy = vl53l0x_sensors[2].is_proxy;
+    } else if (strcmp(name, "prox_3") == 0) {
+        is_proxy = vl53l0x_sensors[3].is_proxy;
+    } else {
+        LOG_ERR("prox sensor not known.");
+    }
+    return is_proxy;
+}
+
 void sensor_thread(void *unused1, void *unused2, void *unused3) {
     int ret;
 
@@ -356,8 +385,8 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_proxy,
                                          cmd_proxy_set_threshold),
                                SHELL_CMD(get-threshold, NULL, "Get current threshold of sensor <name>.",
                                          cmd_proxy_get_threshold),
-                               //SHELL_CMD(get-prox-state, NULL, "Get current proximity state of sensor <name>.",
-                               //          cmd_proxy_get_prox_state),
+                               SHELL_CMD(get-prox-state, NULL, "Get current proximity state of sensor <name>.",
+                                         cmd_proxy_get_proxy_state),
                                SHELL_CMD(get-dis, NULL, "Get current distance of sensor <name>.",
                                          cmd_proxy_get_distance),
                                SHELL_CMD(get-mode, NULL,
