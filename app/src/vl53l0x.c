@@ -66,10 +66,10 @@ struct vl53l0x {
     const char* name;
     uint16_t threshold;
     enum sensor_mode mode;
-    bool isProxy;
+    bool is_ready_checked;
     uint32_t distance_mm;
     VL53L0X_Dev_t vl53l0x;
-    VL53L0X_RangingMeasurementData_t RangingMeasurementData;
+    bool is_proxy;
 };
 
 uint8_t set_threshold_by_name(const char* name, uint16_t threshold);
@@ -233,7 +233,7 @@ uint8_t get_threshold_by_name(const char* name) {
 }
 
 uint8_t set_mode_by_name(const char* name, enum sensor_mode mode) {
-    LOG_DBG("Setting prox: %s to threshold: %u\n", name, mode);
+    LOG_DBG("Setting prox: %s to mode: %u\n", name, mode);
     if (strcmp(name, "prox_0") == 0) {
         vl53l0x_sensors[0].mode = mode;
     } else if (strcmp(name, "prox_1") == 0) {
@@ -307,6 +307,14 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             if (vl53l0x_sensors[i].mode == VL53L0X_MODE_OFF) {
                 continue;
             }
+            if (vl53l0x_sensors[i].is_ready_checked == false) {
+                if (!device_is_ready(vl53l0x)) {
+                    LOG_ERR("sensor: device %s not ready.", vl53l0x_sensors[i].name);
+                    continue;
+                } else {
+                    vl53l0x_sensors[i].is_ready_checked = true;
+                }
+            }
             ret = sensor_sample_fetch(vl53l0x);
             if (ret) {
                 LOG_ERR("sensor_sample_fetch failed for %s, ret %d", vl53l0x_sensors[i].name, ret);
@@ -326,9 +334,9 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
                 continue;
             }
             if (vl53l0x_sensors[i].distance_mm > vl53l0x_sensors[i].threshold) {
-                vl53l0x_sensors[i].isProxy = true;
+                vl53l0x_sensors[i].is_proxy = true;
             } else {
-                vl53l0x_sensors[i].isProxy = false;
+                vl53l0x_sensors[i].is_proxy = false;
             }
             // TODO have some action to detected proximity
         }
@@ -336,12 +344,6 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
 }
 
 void vl53l0x_init() {
-    //TODO initialize sensor in thread directly not here
-    const struct device *vl53l0x_0 = DEVICE_DT_GET(DT_NODELABEL(vl53l0x_0));
-    if (!device_is_ready(vl53l0x_0)) {
-        printk("sensor: device not ready.\n");
-        return;
-    }
     // Create sensor thread
     k_tid_t vl53l0x_tid = k_thread_create(&vl53l0x_thread_data, vl53l0x_stack_area,
                                           K_THREAD_STACK_SIZEOF(vl53l0x_stack_area),
