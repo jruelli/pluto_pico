@@ -46,21 +46,21 @@
         reg = <0x30>;
         xshut-gpios = <&gpio0 21 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
     };
-    //vl53l0x_1: vl53l0x_1@31 {
-    //    compatible = "st,vl53l0x";
-    //    reg = <0x31>;
-    //    xshut-gpio = <&gpio0 28 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
-    //};
-    //vl53l0x_2: vl53l0x_2@32 {
-    //    compatible = "st,vl53l0x";
-    //    reg = <0x32>;
-    //    xshut-gpio = <&gpio0 18 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
-    //};
-    //vl53l0x_3: vl53l0x_3@33 {
-    //    compatible = "st,vl53l0x";
-    //    reg = <0x33>;
-    //    xshut-gpio = <&gpio0 13 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
-    //};
+    vl53l0x_1: vl53l0x_1@31 {
+        compatible = "st,vl53l0x";
+        reg = <0x31>;
+        xshut-gpios = <&gpio0 28 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
+    };
+    vl53l0x_2: vl53l0x_2@32 {
+        compatible = "st,vl53l0x";
+        reg = <0x32>;
+        xshut-gpios = <&gpio0 18 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
+    };
+    vl53l0x_3: vl53l0x_3@33 {
+        compatible = "st,vl53l0x";
+        reg = <0x33>;
+        xshut-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
+    };
 };
 
 / {

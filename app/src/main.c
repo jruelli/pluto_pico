@@ -53,6 +53,6 @@ int main(void) {
     /* Init motordriver */
     motordriver_init();
     /* Init vl53l0x*/
-    vl53l0x_test();
+    vl53l0x_init();
     return 0;
 }

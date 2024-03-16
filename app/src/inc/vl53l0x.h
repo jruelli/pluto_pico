@@ -11,6 +11,6 @@ enum sensor_mode {
     VL53L0X_MODE_OFF
 };
 // Function declarations
-int vl53l0x_test(void);
+void vl53l0x_init(void);
 
 #endif //APP_VL53L0X_H
