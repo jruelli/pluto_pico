@@ -80,7 +80,7 @@ static int cmd_echo(const struct shell *sh, size_t argc, char **argv) {
  */
 static int cmd_version(const struct shell *sh, size_t argc, char **argv) {
     if (argc == 1) {
-        shell_print(sh, "App Version: " APP_VERSION_STRING);
+        shell_print(sh, APP_VERSION_STRING);
     } else {
         shell_print(sh, "Unknown parameter: '%s'", argv[1]);
     }
@@ -104,7 +104,7 @@ static int cmd_version(const struct shell *sh, size_t argc, char **argv) {
  */
 static int cmd_version_build_ver(const struct shell *sh, size_t argc,
                                  char **argv) {
-    shell_print(sh, "App Build Version: " USB_CLI_X_STR(APP_BUILD_VERSION));
+    shell_print(sh, USB_CLI_X_STR(APP_BUILD_VERSION));
     return 0;
 }
 
@@ -221,4 +221,4 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_version,
 SHELL_CMD_REGISTER(echo, NULL, "echo <message> back", cmd_echo);
 
 /* Creating root (level 0) command "version" */
-SHELL_CMD_REGISTER(version, &sub_version, "App version.", cmd_version);
+SHELL_CMD_REGISTER(version, &sub_version, "App version", cmd_version);

@@ -55,7 +55,7 @@ static int cmd_motors_set(const struct shell *shell, size_t argc, char **argv) {
         // Ensuring the speeds are within the valid range
         speed_motor1 = (speed_motor1 > 100) ? 100 : speed_motor1;
         speed_motor2 = (speed_motor2 > 100) ? 100 : speed_motor2;
-
+        shell_print(shell, "%d %d %d %d", speed_motor1, dir_motor1, speed_motor2, dir_motor2);
         set_motors(&motor1, &motor2, speed_motor1, speed_motor2, dir_motor1, dir_motor2);
         LOG_DBG("Motors set: Motor1 - Speed %d, Direction %d; Motor2 - Speed %d, Direction %d",
                     speed_motor1, dir_motor1, speed_motor2, dir_motor2);
