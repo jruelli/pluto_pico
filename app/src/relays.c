@@ -42,7 +42,7 @@
 #include "inc/usb_cli.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(relays, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(relays, LOG_LEVEL_WRN);
 
 static const struct gpio_dt_spec relay_0 = GPIO_DT_SPEC_GET_OR(RELAY_0, gpios, {0});
 static const struct gpio_dt_spec relay_1 = GPIO_DT_SPEC_GET_OR(RELAY_1, gpios,{0});

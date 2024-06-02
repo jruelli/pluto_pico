@@ -47,7 +47,7 @@
 #include "inc/motordriver.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_WRN);
 
 #define VL53L0X_REG_WHO_AM_I                    0xC0
 #define VL53L0X_CHIP_ID                         0xEEAA
