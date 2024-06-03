@@ -1,4 +1,4 @@
-image: ghcr.io/zephyrproject-rtos/ci:v0.26.2
+image: ghcr.io/zephyrproject-rtos/ci:latest
 
 stages:
   - build
