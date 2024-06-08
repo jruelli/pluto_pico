@@ -13,6 +13,7 @@ before_script:
 build:
   stage: build
   script:
+    - west build -b rpi_pico app
     - west twister -T app -v --inline-logs --integration
     # Copy zephyr.uf2 to root directory and name it rpi_pico.uf2
     - find twister-out -name '*.uf2' -exec cp {} rpi_pico.uf2 \;

@@ -1,10 +1,4 @@
-# Copyright (c) 2021 Nordic Semiconductor ASA
-# SPDX-License-Identifier: Apache-2.0
-
 manifest:
-  self:
-    west-commands: scripts/west-commands.yml
-
   remotes:
     - name: zephyrproject-rtos
       url-base: https://github.com/zephyrproject-rtos
@@ -17,3 +11,7 @@ manifest:
         name-allowlist:
           - hal_rpi_pico
           - drivers/sensor/vl53l0x
+    - name: hal_st
+      remote: zephyrproject-rtos
+      revision: main
+      path: modules/hal/st
