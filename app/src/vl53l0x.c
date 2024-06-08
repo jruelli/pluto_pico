@@ -47,7 +47,7 @@
 #include "inc/motordriver.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_WRN);
+LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_INF);
 
 #define VL53L0X_REG_WHO_AM_I                    0xC0
 #define VL53L0X_CHIP_ID                         0xEEAA
@@ -80,10 +80,10 @@ uint32_t get_is_proxy_state_by_name(const char* name);
 
 // Define configurations and data for each sensor
 struct vl53l0x vl53l0x_sensors[NUM_SENSORS] = {
-        {"prox_0", 100, VL53L0X_MODE_OFF, false},
-        {"prox_1", 100, VL53L0X_MODE_OFF, false},
-        {"prox_2", 100, VL53L0X_MODE_OFF, false},
-        {"prox_3", 100, VL53L0X_MODE_OFF, false}
+        {"p_0", 100, VL53L0X_MODE_OFF, false},
+        {"p_1", 100, VL53L0X_MODE_OFF, false},
+        {"p_2", 100, VL53L0X_MODE_DISTANCE, false},
+        {"p_3", 100, VL53L0X_MODE_OFF, false}
 };
 
 /**
@@ -202,23 +202,23 @@ static int cmd_proxy_list_prox(const struct shell *shell, size_t argc, char **ar
 
 const char* get_proxy_name(int proxy_number) {
     switch (proxy_number) {
-        case 0: return "prox_0";
-        case 1: return "prox_1";
-        case 2: return "prox_2";
-        case 3: return "prox_3";
+        case 0: return "p_0";
+        case 1: return "p_1";
+        case 2: return "p_2";
+        case 3: return "p_3";
         default: return "Unknown";
     }
 }
 
 uint8_t set_threshold_by_name(const char* name, uint16_t threshold) {
     LOG_DBG("Setting prox: %s to threshold: %u\n", name, threshold);
-    if (strcmp(name, "prox_0") == 0) {
+    if (strcmp(name, "p_0") == 0) {
         vl53l0x_sensors[0].threshold = threshold;
-    } else if (strcmp(name, "prox_1") == 0) {
+    } else if (strcmp(name, "p_1") == 0) {
         vl53l0x_sensors[1].threshold = threshold;
-    } else if (strcmp(name, "prox_2") == 0) {
+    } else if (strcmp(name, "p_2") == 0) {
         vl53l0x_sensors[2].threshold = threshold;
-    } else if (strcmp(name, "prox_3") == 0) {
+    } else if (strcmp(name, "p_3") == 0) {
         vl53l0x_sensors[3].threshold = threshold;
     } else {
         LOG_ERR("prox sensor not known.");
@@ -229,13 +229,13 @@ uint8_t set_threshold_by_name(const char* name, uint16_t threshold) {
 uint8_t get_threshold_by_name(const char* name) {
     LOG_DBG("Getting threshold: of prox sensor %s\n", name);
     uint16_t threshold = 0;
-    if (strcmp(name, "prox_0") == 0) {
+    if (strcmp(name, "p_0") == 0) {
         threshold = vl53l0x_sensors[0].threshold;
-    } else if (strcmp(name, "prox_1") == 0) {
+    } else if (strcmp(name, "p_1") == 0) {
         threshold = vl53l0x_sensors[1].threshold;
-    } else if (strcmp(name, "prox_2") == 0) {
+    } else if (strcmp(name, "p_2") == 0) {
         threshold = vl53l0x_sensors[2].threshold;
-    } else if (strcmp(name, "prox_3") == 0) {
+    } else if (strcmp(name, "p_3") == 0) {
         threshold = vl53l0x_sensors[3].threshold;
     } else {
         LOG_ERR("prox sensor not known.");
@@ -245,13 +245,13 @@ uint8_t get_threshold_by_name(const char* name) {
 
 uint8_t set_mode_by_name(const char* name, enum sensor_mode mode) {
     LOG_DBG("Setting prox: %s to mode: %u\n", name, mode);
-    if (strcmp(name, "prox_0") == 0) {
+    if (strcmp(name, "p_0") == 0) {
         vl53l0x_sensors[0].mode = mode;
-    } else if (strcmp(name, "prox_1") == 0) {
+    } else if (strcmp(name, "p_1") == 0) {
         vl53l0x_sensors[1].mode = mode;
-    } else if (strcmp(name, "prox_2") == 0) {
+    } else if (strcmp(name, "p_2") == 0) {
         vl53l0x_sensors[2].mode = mode;
-    } else if (strcmp(name, "prox_3") == 0) {
+    } else if (strcmp(name, "p_3") == 0) {
         vl53l0x_sensors[3].mode = mode;
     } else {
         LOG_ERR("prox sensor not known.");
@@ -262,13 +262,13 @@ uint8_t set_mode_by_name(const char* name, enum sensor_mode mode) {
 enum sensor_mode get_mode_by_name(const char* name) {
     LOG_DBG("Getting threshold: of prox sensor %s\n", name);
     enum sensor_mode state = 0;
-    if (strcmp(name, "prox_0") == 0) {
+    if (strcmp(name, "p_0") == 0) {
         state = vl53l0x_sensors[0].mode;
-    } else if (strcmp(name, "prox_1") == 0) {
+    } else if (strcmp(name, "p_1") == 0) {
         state = vl53l0x_sensors[1].mode;
-    } else if (strcmp(name, "prox_2") == 0) {
+    } else if (strcmp(name, "p_2") == 0) {
         state = vl53l0x_sensors[2].mode;
-    } else if (strcmp(name, "prox_3") == 0) {
+    } else if (strcmp(name, "p_3") == 0) {
         state = vl53l0x_sensors[3].mode;
     } else {
         LOG_ERR("prox sensor not known.");
@@ -278,13 +278,13 @@ enum sensor_mode get_mode_by_name(const char* name) {
 
 uint32_t get_distance_by_name(const char* name) {
     uint32_t distance_mm = 0;
-    if (strcmp(name, "prox_0") == 0) {
+    if (strcmp(name, "p_0") == 0) {
         distance_mm = vl53l0x_sensors[0].distance_mm;
-    } else if (strcmp(name, "prox_1") == 0) {
+    } else if (strcmp(name, "p_1") == 0) {
         distance_mm = vl53l0x_sensors[1].distance_mm;
-    } else if (strcmp(name, "prox_2") == 0) {
+    } else if (strcmp(name, "p_2") == 0) {
         distance_mm = vl53l0x_sensors[2].distance_mm;
-    } else if (strcmp(name, "prox_3") == 0) {
+    } else if (strcmp(name, "p_3") == 0) {
         distance_mm = vl53l0x_sensors[3].distance_mm;
     } else {
         LOG_ERR("prox sensor not known.");
@@ -294,13 +294,13 @@ uint32_t get_distance_by_name(const char* name) {
 
 uint32_t get_is_proxy_state_by_name(const char* name) {
     bool is_proxy = 0;
-    if (strcmp(name, "prox_0") == 0) {
+    if (strcmp(name, "p_0") == 0) {
         is_proxy = vl53l0x_sensors[0].is_proxy;
-    } else if (strcmp(name, "prox_1") == 0) {
+    } else if (strcmp(name, "p_1") == 0) {
         is_proxy = vl53l0x_sensors[1].is_proxy;
-    } else if (strcmp(name, "prox_2") == 0) {
+    } else if (strcmp(name, "p_2") == 0) {
         is_proxy = vl53l0x_sensors[2].is_proxy;
-    } else if (strcmp(name, "prox_3") == 0) {
+    } else if (strcmp(name, "p_3") == 0) {
         is_proxy = vl53l0x_sensors[3].is_proxy;
     } else {
         LOG_ERR("prox sensor not known.");
@@ -318,13 +318,13 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
         for (int i = 0; i < ARRAY_SIZE(vl53l0x_sensors); i++) {
             const struct device *vl53l0x;
             // find correct DT_Sensor
-            if (strcmp(vl53l0x_sensors[i].name, "prox_0") == 0) {
+            if (strcmp(vl53l0x_sensors[i].name, "p_0") == 0) {
                 vl53l0x = DEVICE_DT_GET(DT_NODELABEL(vl53l0x_0));
-            } else if (strcmp(vl53l0x_sensors[i].name, "prox_1") == 0) {
+            } else if (strcmp(vl53l0x_sensors[i].name, "p_1") == 0) {
                 vl53l0x = DEVICE_DT_GET(DT_NODELABEL(vl53l0x_1));
-            } else if (strcmp(vl53l0x_sensors[i].name, "prox_2") == 0) {
+            } else if (strcmp(vl53l0x_sensors[i].name, "p_2") == 0) {
                 vl53l0x = DEVICE_DT_GET(DT_NODELABEL(vl53l0x_2));
-            } else if (strcmp(vl53l0x_sensors[i].name, "prox_3") == 0) {
+            } else if (strcmp(vl53l0x_sensors[i].name, "p_3") == 0) {
                 vl53l0x = DEVICE_DT_GET(DT_NODELABEL(vl53l0x_3));
             } else {
                 LOG_ERR("Could not get device binding for %s", vl53l0x_sensors[i].name);
@@ -355,12 +355,17 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             }
             k_sem_take(&data_sem, K_FOREVER); // Take semaphore before accessing shared data
             vl53l0x_sensors[i].distance_mm = (dist_value.val1 * 1000) + (dist_value.val2 / 1000);
+            LOG_DBG("distance measured, it is: %d", vl53l0x_sensors[i].distance_mm);
             k_sem_give(&data_sem); // Give semaphore after accessing shared data
             // Skip to the next sensor if just measures distance
             if (vl53l0x_sensors[i].mode == VL53L0X_MODE_DISTANCE) {
                 continue;
             }
+            if (vl53l0x_sensors[i].distance_mm == 0u) {
+                LOG_ERR("measured distance is 0. Stopping motor!");
+            }
             if (vl53l0x_sensors[i].distance_mm > vl53l0x_sensors[i].threshold) {
+                LOG_INF("measured distance to low. Stopping motor!");
                 vl53l0x_sensors[i].is_proxy = true;
                 motordriver_stop_motors();
             } else {
