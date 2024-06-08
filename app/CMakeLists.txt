@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.13.1)
-set(BOARD rpi_pico)
+set(BOARD pluto_pico)
 set(CONF_FILE "prj.conf")
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 

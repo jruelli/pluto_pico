@@ -1,0 +1,7 @@
+board:
+  name: pluto_pico
+  vendor: raspberrypi
+  socs:
+  - name: rp2040
+    variants:
+    - name: w
