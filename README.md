@@ -1,36 +1,7 @@
-# Zephyr Example Application
+# Pluto-pico
 
-This repository contains a Zephyr example application. The main purpose of this
-repository is to serve as a reference on how to structure Zephyr-based
-applications. Some of the features demonstrated in this example are:
-
-- Basic [Zephyr application][app_dev] skeleton
-- [Zephyr workspace applications][workspace_app]
-- [Zephyr modules][modules]
-- [West T2 topology][west_t2]
-- [Custom boards][board_porting]
-- Custom [devicetree bindings][bindings]
-- Out-of-tree [drivers][drivers]
-- Out-of-tree libraries
-- Example CI configuration (using Github Actions)
-- Custom [west extension][west_ext]
-
-This repository is versioned together with the [Zephyr main tree][zephyr]. This
-means that every time that Zephyr is tagged, this repository is tagged as well
-with the same version number, and the [manifest](west.yml) entry for `zephyr`
-will point to the corresponding Zephyr tag. For example, the `example-application`
-v2.6.0 will point to Zephyr v2.6.0. Note that the `main` branch always
-points to the development branch of Zephyr, also `main`.
-
-[app_dev]: https://docs.zephyrproject.org/latest/develop/application/index.html
-[workspace_app]: https://docs.zephyrproject.org/latest/develop/application/index.html#zephyr-workspace-app
-[modules]: https://docs.zephyrproject.org/latest/develop/modules.html
-[west_t2]: https://docs.zephyrproject.org/latest/develop/west/workspaces.html#west-t2
-[board_porting]: https://docs.zephyrproject.org/latest/guides/porting/board_porting.html
-[bindings]: https://docs.zephyrproject.org/latest/guides/dts/bindings.html
-[drivers]: https://docs.zephyrproject.org/latest/reference/drivers/index.html
-[zephyr]: https://github.com/zephyrproject-rtos/zephyr
-[west_ext]: https://docs.zephyrproject.org/latest/develop/west/extensions.html
+This repository is forked from the Zephyr example application.
+[example-application]: https://github.com/zephyrproject-rtos/example-application
 
 ## Getting Started
 
@@ -40,37 +11,47 @@ environment. Follow the official
 
 ### Initialization
 
-The first step is to initialize the workspace folder (``my-workspace``) where
-the ``example-application`` and all Zephyr modules will be cloned. Run the following
+The first step is to initialize the workspace folder (``pluto-pico-workspace``) where
+the ``pluto_pico`` and all necessary zephyr modules will be cloned. Run the following
 command:
 
 ```shell
-# initialize my-workspace for the example-application (main branch)
-west init -m https://github.com/zephyrproject-rtos/example-application --mr main my-workspace
+# initialize pluto-pico-workspace for the pluto_pico (main branch)
+west init -m https://gitlab.com/pluto-ipek/pluto_pico.git --mr main pluto-pico-workspace
 # update Zephyr modules
-cd my-workspace
+cd pluto-pico-workspace
 west update
 ```
 
-### Building and running
-
-To build the application, run the following command:
+### Building and running the bootloader
+pluto_pico requires MCUBoot as a first stage bootloader.
+In order to have the bootloader run the following command from the workspace path:
 
 ```shell
-west build -b $BOARD app
+cd pluto_pico.git/scripts/mcuboot
+python copy_conf_to_mcuboot.py
 ```
 
-where `$BOARD` is the target board.
-
-You can use the `custom_plank` board found in this
-repository. Note that Zephyr sample boards may be used if an
-appropriate overlay is provided (see `app/boards`).
-
-A sample debug configuration is also provided. To apply it, run the following
-command:
+To build the bootloader for the rpi_pico board, run the following command from the workspace path:
 
 ```shell
-west build -b $BOARD app -- -DOVERLAY_CONFIG=debug.conf
+cd bootloader/mcuboot/boot/zephyr
+west build -b rpi_pico -p auto
+```
+
+Once you have built the bootloader, run the following command to flash it:
+
+```shell
+west flash
+```
+
+### Building and running the main application
+
+To build the application for the pico_kunbus board, run the following command from the workspace path:
+
+```shell
+cd pluto_pico.git
+west build -b rpi_pico -p auto app
 ```
 
 Once you have built the application, run the following command to flash it:

@@ -9,9 +9,7 @@ manifest:
       revision: main
       import:
         name-allowlist:
-          - hal_rpi_pico
+          - cmsis
           - drivers/sensor/vl53l0x
-    - name: hal_st
-      remote: zephyrproject-rtos
-      revision: main
-      path: modules/hal/st
+          - hal_rpi_pico
+          - hal_st
