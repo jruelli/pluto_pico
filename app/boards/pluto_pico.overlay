@@ -41,24 +41,24 @@
     status = "okay";
     pinctrl-names = "default";
     clock-frequency = <100000>;
-    vl53l0x_0: vl53l0x_0@30 {
+    vl53l0x_0: vl53l0x_0@54 {
         compatible = "st,vl53l0x";
-        reg = <0x30>;
-        xshut-gpios = <&gpio0 21 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
+        reg = <0x54>;
+        xshut-gpios = <&gpio0 20 GPIO_ACTIVE_LOW>; // GPIO1 of vl53l0x_0
     };
-    vl53l0x_1: vl53l0x_1@31 {
+    vl53l0x_1: vl53l0x_1@64 {
         compatible = "st,vl53l0x";
-        reg = <0x31>;
+        reg = <0x64>;
         xshut-gpios = <&gpio0 28 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
     };
-    vl53l0x_2: vl53l0x_2@32 {
+    vl53l0x_2: vl53l0x_2@56 {
         compatible = "st,vl53l0x";
-        reg = <0x32>;
-        xshut-gpios = <&gpio0 18 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
+        reg = <0x56>;
+        xshut-gpios = <&gpio0 18 GPIO_ACTIVE_LOW>; // GPIO1 of vl53l0x_2
     };
-    vl53l0x_3: vl53l0x_3@33 {
+    vl53l0x_3: vl53l0x_3@68 {
         compatible = "st,vl53l0x";
-        reg = <0x33>;
+        reg = <0x68>;
         xshut-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
     };
 };

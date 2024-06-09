@@ -47,7 +47,7 @@
 #include "inc/motordriver.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_WRN);
 
 #define VL53L0X_REG_WHO_AM_I                    0xC0
 #define VL53L0X_CHIP_ID                         0xEEAA
@@ -106,6 +106,7 @@ static int cmd_proxy_set_threshold(const struct shell *shell, size_t argc, char 
     if (argc == 3) {
         const char *name = argv[1];
         uint16_t threshold = simple_strtou16(argv[2]) != 0; // Convert to boolean
+        shell_print(shell, "%s thresh: %d", name, threshold);
         set_threshold_by_name(name, threshold);
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
@@ -117,7 +118,7 @@ static int cmd_proxy_get_threshold(const struct shell *shell, size_t argc, char 
     if (argc == 2) {
         const char *name = argv[1];
         uint16_t threshold = get_threshold_by_name(name);
-        shell_print(shell, "%s state: %d", name, threshold);
+        shell_print(shell, "%s thresh: %d", name, threshold);
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
     }
@@ -151,6 +152,7 @@ static int cmd_proxy_set_mode(const struct shell *shell, size_t argc, char **arg
     if (argc == 3) {
         const char *name = argv[1];
         const char *mode = argv[2];
+        bool isError = false;
         enum sensor_mode sensor_mode = VL53L0X_MODE_PROXIMITY;
         if (strcmp(mode, "p") == 0) {
             sensor_mode = VL53L0X_MODE_PROXIMITY;
@@ -159,9 +161,13 @@ static int cmd_proxy_set_mode(const struct shell *shell, size_t argc, char **arg
         } else if (strcmp(mode, "o") == 0) {
             sensor_mode = VL53L0X_MODE_OFF;
         } else {
+            isError = true;
             shell_error(shell, "mode not known.");
         }
-        set_mode_by_name(name, sensor_mode);
+        if (!isError) {
+            shell_print(shell, "%s mode: %d", name, sensor_mode);
+            set_mode_by_name(name, sensor_mode);
+        }
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
     }
@@ -182,6 +188,9 @@ static int cmd_proxy_get_mode(const struct shell *shell, size_t argc, char **arg
                 break;
             case VL53L0X_MODE_OFF:
                 mode_str = "Off(o)";
+                break;
+            case VL53L0X_MODE_ERROR:
+                mode_str = "Error";
                 break;
             default:
                 mode_str = "Unknown";
@@ -334,6 +343,9 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             if (vl53l0x_sensors[i].mode == VL53L0X_MODE_OFF) {
                 continue;
             }
+            if (vl53l0x_sensors[i].mode == VL53L0X_MODE_ERROR) {
+                continue;
+            }
             if (vl53l0x_sensors[i].is_ready_checked == false) {
                 if (!device_is_ready(vl53l0x)) {
                     LOG_ERR("sensor: device %s not ready.", vl53l0x_sensors[i].name);
@@ -344,7 +356,10 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             }
             ret = sensor_sample_fetch(vl53l0x);
             if (ret) {
+                vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
                 LOG_ERR("sensor_sample_fetch failed for %s, ret %d", vl53l0x_sensors[i].name, ret);
+                LOG_INF("Stopping motors");
+                motordriver_stop_motors();
                 continue; // Skip to the next sensor
             }
             struct sensor_value dist_value;
@@ -355,17 +370,20 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             }
             k_sem_take(&data_sem, K_FOREVER); // Take semaphore before accessing shared data
             vl53l0x_sensors[i].distance_mm = (dist_value.val1 * 1000) + (dist_value.val2 / 1000);
-            LOG_DBG("distance measured, it is: %d", vl53l0x_sensors[i].distance_mm);
+            LOG_DBG("distance of %s is: %d", vl53l0x_sensors[i].name, vl53l0x_sensors[i].distance_mm);
             k_sem_give(&data_sem); // Give semaphore after accessing shared data
             // Skip to the next sensor if just measures distance
             if (vl53l0x_sensors[i].mode == VL53L0X_MODE_DISTANCE) {
                 continue;
             }
             if (vl53l0x_sensors[i].distance_mm == 0u) {
+                vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
                 LOG_ERR("measured distance is 0. Stopping motor!");
+                motordriver_stop_motors();
             }
-            if (vl53l0x_sensors[i].distance_mm > vl53l0x_sensors[i].threshold) {
+            if (vl53l0x_sensors[i].distance_mm < vl53l0x_sensors[i].threshold) {
                 LOG_INF("measured distance to low. Stopping motor!");
+                vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
                 vl53l0x_sensors[i].is_proxy = true;
                 motordriver_stop_motors();
             } else {
