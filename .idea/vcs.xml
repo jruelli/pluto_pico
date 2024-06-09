@@ -2,32 +2,6 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/bootloader/mcuboot" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/bsim_hw_models/nrf_hw_models" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/crypto/tinycrypt" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/debug/mipi-sys-t" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/altera" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/ambiq" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/atmel" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/cmsis" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/espressif" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/intel" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/libmetal" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/microchip" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/nuvoton" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/openisa" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/quicklogic" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/renesas" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/rpi_pico" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/silabs" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/st" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/stm32" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/telink" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/ti" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/wurthelektronik" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/hal/xtensa" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/lib/open-amp" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/modules/lib/picolibc" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../../zephyr/zephyrproject/zephyr" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../modules/hal/rpi_pico" vcs="Git" />
   </component>
 </project>

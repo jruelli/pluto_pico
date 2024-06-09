@@ -401,7 +401,6 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             if (ret) {
                 vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
                 LOG_ERR("sensor_sample_fetch failed for %s, ret %d", vl53l0x_sensors[i].name, ret);
-                LOG_INF("Stopping motors");
                 motordriver_stop_motors();
                 continue; // Skip to the next sensor
             }
