@@ -40,7 +40,7 @@
 #include "inc/motordriver.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(motordriver, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(motordriver, LOG_LEVEL_WRN);
 
 static const struct pwm_dt_spec pwm_1 = PWM_DT_SPEC_GET_OR(PWM_1, {0});
 static const struct pwm_dt_spec pwm_2 = PWM_DT_SPEC_GET_OR(PWM_2, {0});
@@ -184,7 +184,7 @@ void init_motor(motor_t* motor) {
     bool initial_direction = 0;
     uint32_t initial_speed = 0;
     motordriver_set_dir(motor, initial_direction);
-    LOG_INF("%s configured!", motor->name);
+    LOG_DBG("%s configured!", motor->name);
     motordriver_adjust_motor_speed_blocking(motor, initial_speed);
 }
 
@@ -336,6 +336,16 @@ void set_motors(motor_t *m1, motor_t *m2, uint32_t speed1, uint32_t speed2, bool
     motordriver_adjust_motor_speed_non_blocking(m2, speed2);
 }
 
+/**
+ * @brief Stops both motors by gradually reducing their speed to zero.
+ */
+void motordriver_stop_motors() {
+    // Set the speed of both motors to zero
+    motordriver_adjust_motor_speed_non_blocking(&motor1, 0);
+    motordriver_adjust_motor_speed_non_blocking(&motor2, 0);
+
+    LOG_WRN("Both motors are stopping.");
+}
 
 /**
  * @brief Initializes the motor driver module.

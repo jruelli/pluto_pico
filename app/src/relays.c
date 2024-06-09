@@ -42,7 +42,7 @@
 #include "inc/usb_cli.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(relays, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(relays, LOG_LEVEL_WRN);
 
 static const struct gpio_dt_spec relay_0 = GPIO_DT_SPEC_GET_OR(RELAY_0, gpios, {0});
 static const struct gpio_dt_spec relay_1 = GPIO_DT_SPEC_GET_OR(RELAY_1, gpios,{0});
@@ -218,6 +218,7 @@ static int cmd_relays_set_relay(const struct shell *shell, size_t argc, char **a
     if (argc == 3) {
         const char *name = argv[1];
         bool state_val = simple_strtou8(argv[2]) != 0; // Convert to boolean
+        shell_print(shell, "%d", state_val);
         set_relay_by_name(name, state_val);
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
@@ -266,8 +267,9 @@ static int cmd_relays_get_relay(const struct shell *shell, size_t argc, char **a
  */
 static int cmd_relays_set_relays(const struct shell *shell, size_t argc, char **argv) {
    if (argc == 2) {
-            uint8_t value = simple_strtou8(argv[1]);
-            set_relays(value);
+       uint8_t value = simple_strtou8(argv[1]);
+       shell_print(shell, "%d", value);
+       set_relays(value);
    } else {
        shell_error(shell, "Invalid number of arguments for subcommand");
    }

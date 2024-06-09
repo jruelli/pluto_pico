@@ -20,7 +20,7 @@
 #include "inc/user_led.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(user_led, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(user_led, LOG_LEVEL_WRN);
 
 static struct k_thread user_led_thread_data;
 K_THREAD_STACK_DEFINE(user_led_stack_area, USER_LED_STACK_SIZE);

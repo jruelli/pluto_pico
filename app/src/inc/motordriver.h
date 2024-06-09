@@ -15,6 +15,9 @@
 #ifndef APP_MOTORDRIVER_H
 #define APP_MOTORDRIVER_H
 
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/pwm.h>
+
 // GPIO specifications from device tree
 #define DIR_1	DT_ALIAS(dir1)
 #define DIR_2	DT_ALIAS(dir2)
@@ -57,6 +60,7 @@ void set_motors(motor_t *motor1, motor_t *motor2, uint32_t speed1, uint32_t spee
 void motordriver_set_dir(motor_t* motor, bool dir);
 void motordriver_adjust_motor_speed_blocking(motor_t* motor, uint32_t target_speed);
 void motordriver_adjust_motor_speed_non_blocking(motor_t *motor, uint32_t target_speed);
+void motordriver_stop_motors();
 
 void cmd_motor1_init();
 void cmd_motor2_init();

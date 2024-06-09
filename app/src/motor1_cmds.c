@@ -25,7 +25,7 @@
 #include "inc/usb_cli.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(motor1_cmds, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(motor1_cmds, LOG_LEVEL_WRN);
 
 /**
  * @brief Root command function for motor1.
@@ -48,6 +48,7 @@ static int cmd_motor1(const struct shell *shell, size_t argc, char **argv) {
 static int cmd_motor1_set_dir(const struct shell *shell, size_t argc, char **argv) {
     if (argc == 2) {
         bool target_direction = simple_strtou8(argv[1]) != 0;
+        shell_print(shell, "%d", target_direction);
         motordriver_set_dir(&motor1, target_direction);
     } else {
         shell_error(shell, "Usage: motor1 set-dir <0/1>");
@@ -58,6 +59,7 @@ static int cmd_motor1_set_dir(const struct shell *shell, size_t argc, char **arg
 static int cmd_motor1_set_speed(const struct shell *shell, size_t argc, char **argv) {
     if (argc == 2) {
         uint32_t target_speed = simple_strtou8(argv[1]);
+        shell_print(shell, "%d", target_speed);
         motordriver_adjust_motor_speed_non_blocking(&motor1, target_speed);
     } else {
         shell_error(shell, "Usage: motor1 set-speed <0-100>");
@@ -97,6 +99,7 @@ static int cmd_motor1_config_acc_rate(const struct shell *shell, size_t argc, ch
     if (argc == 2) {
         uint32_t acceleration_rate = simple_strtou8(argv[1]);
         if (acceleration_rate != 0 && acceleration_rate < 100) {
+            shell_print(shell, "%d", acceleration_rate);
             motor1.acceleration_rate = acceleration_rate;
         } else {
             shell_error(shell, "Invalid acceleration rate.");
@@ -111,6 +114,7 @@ static int cmd_motor1_config_brak_rate(const struct shell *shell, size_t argc, c
     if (argc == 2) {
         uint32_t braking_rate = simple_strtou8(argv[1]);
         if (braking_rate != 0 && braking_rate < 100) {
+            shell_print(shell, "%d", braking_rate);
             motor1.braking_rate = braking_rate;
         } else {
             shell_error(shell, "Invalid braking rate.");
@@ -125,6 +129,7 @@ static int cmd_motor1_config_acc_rate_delay(const struct shell *shell, size_t ar
     if (argc == 2) {
         int32_t acceleration_rate_delay = (int32_t)simple_strtou32(argv[1]);
         if (acceleration_rate_delay != 0) {
+            shell_print(shell, "%d", acceleration_rate_delay);
             motor1.acceleration_rate_delay = acceleration_rate_delay;
         } else {
             shell_error(shell, "Invalid acceleration rate delay.");
@@ -139,6 +144,7 @@ static int cmd_motor1_config_brak_rate_delay(const struct shell *shell, size_t a
     if (argc == 2) {
         int32_t braking_rate_delay = (int32_t)simple_strtou32(argv[1]);
         if (braking_rate_delay != 0) {
+            shell_print(shell, "%d", braking_rate_delay);
             motor1.braking_rate_delay = braking_rate_delay;
         } else {
             shell_error(shell, "Invalid braking rate delay.");

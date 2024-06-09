@@ -12,3 +12,4 @@
 
 __pycache__/
 /.idea/vcs.xml
+/app/cmake-build-default/**
