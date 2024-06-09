@@ -4,32 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
- * @file relays.c
- * @brief Relay Control Module
+ * @file vl53l0x.c
+ * @brief VL53L0X Sensor Control Module
  *
  * This module provides a set of functions for controlling and querying the state
- * of relay modules in an embedded system. It includes capabilities to set the state
- * of individual relays or all relays simultaneously, retrieve the current state of
- * any relay, and interact with the relay module through a command-line interface.
- * The functions make use of GPIO (General-Purpose Input/Output) pins to manage
- * the relay states.
- *
- * This module facilitates the integration of relay control into larger systems,
- * allowing for effective management of power and signal control through relays.
- * It is designed to be easy to use and integrate into various embedded systems
- * requiring relay control functionality.
+ * of VL53L0X proximity sensors in an embedded system. It includes capabilities
+ * to set the threshold, retrieve distance measurements, and configure sensor modes.
+ * The functions interact with the VL53L0X sensors through I2C communication and
+ * provide a command-line interface for sensor control.
  *
  * Key functionalities include:
- * - Setting the state of individual or multiple relays.
- * - Querying the state of any relay.
- * - Command-line interface for relay control.
- * - Initialization and configuration of relay GPIO pins.
+ * - Setting the threshold for proximity detection.
+ * - Retrieving the current distance measurement from the sensor.
+ * - Configuring the mode of the sensor (proximity, distance, or off).
+ * - Command-line interface for sensor control.
+ * - Initialization and configuration of VL53L0X sensors.
  *
- * The module is a part of a larger system and can be utilized in applications such
- * as home automation, industrial control, and other scenarios where relay control
- * is essential.
+ * This module is designed to be integrated into larger systems requiring precise
+ * distance measurements and proximity detection, such as robotics, home automation,
+ * and industrial control systems.
  *
- * @author Jannis Ruellmann
+ * Author: Jannis Ruellmann
  */
 
 #include <devicetree_generated.h>
@@ -219,6 +214,13 @@ const char* get_proxy_name(int proxy_number) {
     }
 }
 
+/**
+ * @brief Set the threshold for a specific sensor by name.
+ *
+ * @param name Name of the sensor (e.g., "p_0").
+ * @param threshold Threshold value in millimeters.
+ * @return 0 on success, error code on failure.
+ */
 uint8_t set_threshold_by_name(const char* name, uint16_t threshold) {
     LOG_DBG("Setting prox: %s to threshold: %u\n", name, threshold);
     if (strcmp(name, "p_0") == 0) {
@@ -235,6 +237,12 @@ uint8_t set_threshold_by_name(const char* name, uint16_t threshold) {
     return 0;
 }
 
+/**
+ * @brief Get the threshold value for a specific sensor by name.
+ *
+ * @param name Name of the sensor (e.g., "p_0").
+ * @return Threshold value in millimeters.
+ */
 uint8_t get_threshold_by_name(const char* name) {
     LOG_DBG("Getting threshold: of prox sensor %s\n", name);
     uint16_t threshold = 0;
@@ -252,6 +260,13 @@ uint8_t get_threshold_by_name(const char* name) {
     return threshold;
 }
 
+/**
+ * @brief Set the mode for a specific sensor by name.
+ *
+ * @param name Name of the sensor (e.g., "p_0").
+ * @param mode Mode to set (VL53L0X_MODE_PROXIMITY, VL53L0X_MODE_DISTANCE, VL53L0X_MODE_OFF).
+ * @return 0 on success, error code on failure.
+ */
 uint8_t set_mode_by_name(const char* name, enum sensor_mode mode) {
     LOG_DBG("Setting prox: %s to mode: %u\n", name, mode);
     if (strcmp(name, "p_0") == 0) {
@@ -268,6 +283,12 @@ uint8_t set_mode_by_name(const char* name, enum sensor_mode mode) {
     return 0;
 }
 
+/**
+ * @brief Get the current mode of a specific sensor by name.
+ *
+ * @param name Name of the sensor (e.g., "p_0").
+ * @return Current mode of the sensor.
+ */
 enum sensor_mode get_mode_by_name(const char* name) {
     LOG_DBG("Getting threshold: of prox sensor %s\n", name);
     enum sensor_mode state = 0;
@@ -285,6 +306,12 @@ enum sensor_mode get_mode_by_name(const char* name) {
     return state;
 }
 
+/**
+ * @brief Get the current distance measurement of a specific sensor by name.
+ *
+ * @param name Name of the sensor (e.g., "p_0").
+ * @return Distance measurement in millimeters.
+ */
 uint32_t get_distance_by_name(const char* name) {
     uint32_t distance_mm = 0;
     if (strcmp(name, "p_0") == 0) {
@@ -301,6 +328,12 @@ uint32_t get_distance_by_name(const char* name) {
     return distance_mm;
 }
 
+/**
+ * @brief Get the proxy state of a specific sensor by name.
+ *
+ * @param name Name of the sensor (e.g., "p_0").
+ * @return True if the sensor is in proxy state, false otherwise.
+ */
 uint32_t get_is_proxy_state_by_name(const char* name) {
     bool is_proxy = 0;
     if (strcmp(name, "p_0") == 0) {
@@ -317,6 +350,16 @@ uint32_t get_is_proxy_state_by_name(const char* name) {
     return is_proxy;
 }
 
+/**
+ * @brief Sensor polling thread function.
+ *
+ * This function polls the sensors at a defined interval, fetches the distance data,
+ * and updates the sensor states. It also handles errors and stops the motors if necessary.
+ *
+ * @param unused1 Unused parameter.
+ * @param unused2 Unused parameter.
+ * @param unused3 Unused parameter.
+ */
 void sensor_thread(void *unused1, void *unused2, void *unused3) {
     int ret;
 
@@ -378,11 +421,12 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             }
             if (vl53l0x_sensors[i].distance_mm == 0u) {
                 vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
-                LOG_ERR("measured distance is 0. Stopping motor!");
+                LOG_ERR("measured distance is 0");
                 motordriver_stop_motors();
+                continue;
             }
             if (vl53l0x_sensors[i].distance_mm < vl53l0x_sensors[i].threshold) {
-                LOG_INF("measured distance to low. Stopping motor!");
+                LOG_WRN("measured distance under defined threshold.");
                 vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
                 vl53l0x_sensors[i].is_proxy = true;
                 motordriver_stop_motors();
@@ -393,6 +437,9 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
     }
 }
 
+/**
+ * @brief Initialize the VL53L0X sensors and start the sensor thread.
+ */
 void vl53l0x_init() {
     // Create sensor thread
     k_tid_t vl53l0x_tid = k_thread_create(&vl53l0x_thread_data, vl53l0x_stack_area,
@@ -424,5 +471,5 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_proxy,
                                SHELL_SUBCMD_SET_END
 );
 
-/* Creating root (level 0) command "proxies" */
+/* Creating root (level 0) command "proxy" */
 SHELL_CMD_REGISTER(proxy, &sub_proxy, "control/configure proximity sensors.", cmd_proxy);

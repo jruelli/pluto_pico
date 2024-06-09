@@ -10,6 +10,6 @@ manifest:
       import:
         name-allowlist:
           - cmsis
-          - drivers/sensor/vl53l0x
           - hal_rpi_pico
           - hal_st
+          - drivers/sensor/vl53l0x
