@@ -344,7 +344,7 @@ void motordriver_stop_motors() {
     motordriver_adjust_motor_speed_non_blocking(&motor1, 0);
     motordriver_adjust_motor_speed_non_blocking(&motor2, 0);
 
-    LOG_WRN("Both motors are stopping.");
+    LOG_INF("Both motors are stopping.");
 }
 
 /**
