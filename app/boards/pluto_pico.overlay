@@ -66,6 +66,10 @@
 / {
     gpio_keys {
         compatible = "gpio-keys";
+        emergency_button: emergency_button {
+            label = "Emergency Button";
+            gpios = <&gpio0 26 GPIO_ACTIVE_LOW>;
+        };
         relay1: relay_1 {
             label = "relay_1";
             gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
@@ -109,6 +113,7 @@
     };
 
     aliases {
+        embutton = &emergency_button;
         relay1 = &relay1;
         relay2 = &relay2;
         relay3 = &relay3;

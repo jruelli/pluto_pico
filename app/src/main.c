@@ -27,6 +27,7 @@
 #include "inc/relays.h"
 #include "inc/motordriver.h"
 #include "inc/vl53l0x.h"
+#include "inc/emergency_button.h"
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -54,5 +55,7 @@ int main(void) {
     motordriver_init();
     /* Init vl53l0x*/
     vl53l0x_init();
+    /* Init emrgency_button */
+    emergency_button_init();
     return 0;
 }
