@@ -17,6 +17,12 @@
 
 #include <stdio.h>
 
+struct mcp9808_sensor {
+    const struct device *dev;
+    bool enabled;
+    double temperature;
+};
+
 // Function declarations
 void pluto_mcp9808_init();
 

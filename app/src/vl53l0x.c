@@ -48,7 +48,7 @@ LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_WRN);
 #define VL53L0X_CHIP_ID                         0xEEAA
 
 #define SENSOR_POLL_INTERVAL K_MSEC(1000)
-#define NUM_SENSORS 4
+#define PLUTO_VL53L0X_NUM_SENSORS 4
 
 static struct k_thread vl53l0x_thread_data;
 K_THREAD_STACK_DEFINE(vl53l0x_stack_area, 1024u);
@@ -74,7 +74,7 @@ const char* get_proxy_name(int proxy_number);
 uint32_t get_is_proxy_state_by_name(const char* name);
 
 // Define configurations and data for each sensor
-struct vl53l0x vl53l0x_sensors[NUM_SENSORS] = {
+struct vl53l0x vl53l0x_sensors[PLUTO_VL53L0X_NUM_SENSORS] = {
         {"p_0", 100, VL53L0X_MODE_OFF, false},
         {"p_1", 100, VL53L0X_MODE_OFF, false},
         {"p_2", 100, VL53L0X_MODE_OFF, false},
