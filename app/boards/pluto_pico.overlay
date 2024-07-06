@@ -40,7 +40,7 @@
     pinctrl-0 = <&my_i2c0_pinctrl>;
     status = "okay";
     pinctrl-names = "default";
-    clock-frequency = <100000>;
+    clock-frequency = <400000>;
     ads1115: ads1115@48 {
         compatible = "ti,ads1115";
         #io-channel-cells = <1>;
@@ -78,6 +78,11 @@
         compatible = "st,vl53l0x";
         reg = <0x68>;
         xshut-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
+    };
+    neodriver: neodriver@60 {
+        compatible = "adafruit,neodriver";
+        reg = <0x60>;
+        label = "NEODRIVER";
     };
 };
 
