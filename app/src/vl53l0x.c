@@ -77,7 +77,7 @@ uint32_t get_is_proxy_state_by_name(const char* name);
 struct vl53l0x vl53l0x_sensors[NUM_SENSORS] = {
         {"p_0", 100, VL53L0X_MODE_OFF, false},
         {"p_1", 100, VL53L0X_MODE_OFF, false},
-        {"p_2", 100, VL53L0X_MODE_DISTANCE, false},
+        {"p_2", 100, VL53L0X_MODE_OFF, false},
         {"p_3", 100, VL53L0X_MODE_OFF, false}
 };
 
@@ -100,8 +100,8 @@ static int cmd_proxy(const struct shell *shell, size_t argc, char **argv) {
 static int cmd_proxy_set_threshold(const struct shell *shell, size_t argc, char **argv) {
     if (argc == 3) {
         const char *name = argv[1];
-        uint16_t threshold = simple_strtou16(argv[2]) != 0; // Convert to boolean
-        shell_print(shell, "%s thresh: %d", name, threshold);
+        uint16_t threshold = simple_strtou16(argv[2]); // Convert to boolean
+        shell_print(shell, "%d", threshold);
         set_threshold_by_name(name, threshold);
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
@@ -113,7 +113,7 @@ static int cmd_proxy_get_threshold(const struct shell *shell, size_t argc, char 
     if (argc == 2) {
         const char *name = argv[1];
         uint16_t threshold = get_threshold_by_name(name);
-        shell_print(shell, "%s thresh: %d", name, threshold);
+        shell_print(shell, "%d", threshold);
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
     }
@@ -124,7 +124,7 @@ static int cmd_proxy_get_distance(const struct shell *shell, size_t argc, char *
     if (argc == 2) {
         const char *name = argv[1];
         uint32_t distance = get_distance_by_name(name);
-        shell_print(shell, "%s distance: %d", name, distance);
+        shell_print(shell, "%d", distance);
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
     }
@@ -136,7 +136,7 @@ static int cmd_proxy_get_proxy_state(const struct shell *shell, size_t argc, cha
     if (argc == 2) {
         const char *name = argv[1];
         bool is_proxy = get_is_proxy_state_by_name(name);
-        shell_print(shell, "%s is_proxy: %d", name, is_proxy);
+        shell_print(shell, "%d", is_proxy);
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
     }
@@ -160,7 +160,7 @@ static int cmd_proxy_set_mode(const struct shell *shell, size_t argc, char **arg
             shell_error(shell, "mode not known.");
         }
         if (!isError) {
-            shell_print(shell, "%s mode: %d", name, sensor_mode);
+            shell_print(shell, "%u", sensor_mode);
             set_mode_by_name(name, sensor_mode);
         }
     } else {
@@ -190,7 +190,7 @@ static int cmd_proxy_get_mode(const struct shell *shell, size_t argc, char **arg
             default:
                 mode_str = "Unknown";
         }
-        shell_print(shell, "%s mode: %s", name, mode_str);
+        shell_print(shell, "%s", mode_str);
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
     }
@@ -461,7 +461,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_proxy,
                                SHELL_CMD(get-mode, NULL,
                                          "Get conf for sensor <name>.",
                                          cmd_proxy_get_mode),
-                               SHELL_CMD(set-mode, NULL,
+                               SHELL_CMD(config-mode, NULL,
                                          "Configure sensor <name> to distance (d) ,proximity measurement (p) "
                                          "or off (off) <[d||p||off]>.",
                                          cmd_proxy_set_mode),

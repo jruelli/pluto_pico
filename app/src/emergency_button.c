@@ -149,7 +149,7 @@ void emergency_button_init() {
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_em_button,
                                SHELL_CMD(get, NULL, "Get state of emergency_button",
                                          cmd_em_button_get_state),
-                               SHELL_CMD(set, NULL, "Enable(1)/disable(0) motor stop on emergency button press. "
+                               SHELL_CMD(config-mode, NULL, "Enable(1)/disable(0) motor stop on emergency button press. "
                                                     "Reactivate after event" , cmd_em_button_activate),
                                          SHELL_SUBCMD_SET_END
 );
