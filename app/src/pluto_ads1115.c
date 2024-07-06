@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <devicetree_generated.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/logging/log.h>
 #include <string.h>
@@ -12,8 +11,11 @@
 #include <zephyr/drivers/sensor.h>
 
 #include "inc/pluto_ads1115.h"
+#include "inc/ads1115.h"
 
-LOG_MODULE_REGISTER(pluto_ads1115, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(pluto_ads1115, LOG_LEVEL_WRN);
+
+ADS1115 ads1115;
 
 static struct ads1115_input inputs[] = {
         { "a_0", false, -1.0 },
@@ -37,6 +39,39 @@ static int cmd_ads1115_get_input(const struct shell *shell, size_t argc, char **
         shell_error(shell, "Usage: ads1115 get-input <input_index>");
         return -EINVAL;
     }
+    int input_index = atoi(argv[1]);
+    if (input_index < 0 || input_index >= PLUTO_MCP9808_NUM_SENSORS) {
+        shell_error(shell, "Invalid sensor index.");
+        return -EINVAL;
+    }
+    if (!inputs[input_index].enabled) {
+        shell_print(shell, "-1");
+        return 0;
+    }
+    double input = -1.0;
+    switch (input_index) {
+        case 0:
+            input = (double)ADS1115_readADC(&ads1115, CH_0);
+            break;
+        case 1:
+            input = (double)ADS1115_readADC(&ads1115, CH_1);
+            break;
+        case 2:
+            input = (double)ADS1115_readADC(&ads1115, CH_2);
+            break;
+        case 3:
+            input = (double)ADS1115_readADC(&ads1115, CH_3);
+            break;
+        default:
+            input = -1.0;
+            break;
+    }
+    inputs[input_index].voltage = (double) input;
+    int integer_part = (int)inputs[input_index].voltage;
+    int fractional_part = (int)((inputs[input_index].voltage - integer_part) * 1000000);
+    char vol_str[16];
+    snprintf(vol_str, sizeof(vol_str), "%d.%06d", integer_part, fractional_part);
+    shell_print(shell, "%s V", vol_str);
     return 0;
 }
 
@@ -58,6 +93,7 @@ static int cmd_ads1115_config_input(const struct shell *shell, size_t argc, char
 
 void pluto_ads1115_init() {
     LOG_INF("Initializing ads1115 module");
+    ADS1115_init(&ads1115);
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_ads1115,

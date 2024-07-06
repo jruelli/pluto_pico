@@ -41,6 +41,12 @@
     status = "okay";
     pinctrl-names = "default";
     clock-frequency = <100000>;
+    ads1115: ads1115@48 {
+        compatible = "ti,ads1115";
+        #io-channel-cells = <1>;
+        reg = <0x48 >;
+        label = "ADS1115";
+    };
     mcp9808_0: mcp9808_0@18 {
         compatible = "microchip,mcp9808";
         reg = <0x18>;

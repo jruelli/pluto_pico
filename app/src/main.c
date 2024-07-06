@@ -29,6 +29,7 @@
 #include "inc/vl53l0x.h"
 #include "inc/emergency_button.h"
 #include "inc/pluto_mcp9808.h"
+#include "inc/pluto_ads1115.h"
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -60,5 +61,7 @@ int main(void) {
     emergency_button_init();
     /* Init mcp9808 temperature sensors */
     pluto_mcp9808_init();
+    /* Init ads1115 adc */
+    pluto_ads1115_init();
     return 0;
 }
