@@ -21,6 +21,8 @@ struct ads1115_input {
     const char *name;
     bool enabled;
     double voltage;
+    bool threshold_enabled;
+    double threshold;
 };
 
 // Function declarations

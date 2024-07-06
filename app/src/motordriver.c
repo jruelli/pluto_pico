@@ -343,8 +343,7 @@ void motordriver_stop_motors() {
     // Set the speed of both motors to zero
     motordriver_adjust_motor_speed_non_blocking(&motor1, 0);
     motordriver_adjust_motor_speed_non_blocking(&motor2, 0);
-
-    LOG_INF("Both motors are stopping.");
+    LOG_WRN("Both motors are stopping.");
 }
 
 /**
