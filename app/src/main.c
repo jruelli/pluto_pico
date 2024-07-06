@@ -28,6 +28,7 @@
 #include "inc/motordriver.h"
 #include "inc/vl53l0x.h"
 #include "inc/emergency_button.h"
+#include "inc/mcp9808.h"
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -57,5 +58,7 @@ int main(void) {
     vl53l0x_init();
     /* Init emrgency_button */
     emergency_button_init();
+    /* Init mcp9808 temperature sensors */
+    mcp9808_init();
     return 0;
 }
