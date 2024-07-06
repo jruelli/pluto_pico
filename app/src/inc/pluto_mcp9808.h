@@ -21,6 +21,8 @@ struct mcp9808_sensor {
     const struct device *dev;
     bool enabled;
     double temperature;
+    bool threshold_enabled;
+    double threshold;
 };
 
 // Function declarations
