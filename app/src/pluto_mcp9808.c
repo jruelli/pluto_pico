@@ -32,17 +32,18 @@
  * @author Jannis Ruellmann
  */
 
-#include <zephyr/drivers/gpio.h>
 #include <devicetree_generated.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/logging/log.h>
 #include <string.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/sensor.h>
 
-#include "inc/mcp9808.h"
-#include "inc/usb_cli.h"
+#include "inc/pluto_mcp9808.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
-LOG_MODULE_REGISTER(mcp9808, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(pluto_mcp9808, LOG_LEVEL_DBG);
 
 /* Function prototypes */
 const char* get_mcp9808_name(int mcp9808_number);
@@ -172,8 +173,37 @@ static int cmd_mcp9808_list_sensors(const struct shell *shell, size_t argc, char
  * of the program to prepare the relay hardware for operation.
  *
  */
-void mcp9808_init() {
+void pluto_mcp9808_init() {
     LOG_INF("Initializing mcp9808 module");
+    const struct device *const dev = DEVICE_DT_GET_ANY(microchip_mcp9808);
+    int rc;
+    if (dev == NULL) {
+        LOG_ERR("Device not found.");
+    }
+    if (!device_is_ready(dev)) {
+        LOG_WRN("Device %s is not ready.", dev->name);
+    }
+    while (1) {
+        struct sensor_value temp;
+        rc = sensor_sample_fetch(dev);
+        if (rc != 0) {
+            LOG_INF("sensor_sample_fetch error: %d", rc);
+            break;
+        }
+        rc = sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP, &temp);
+        if (rc != 0) {
+            LOG_ERR("sensor_channel_get error: %d", rc);
+            break;
+        }
+        double temperature = sensor_value_to_double(&temp);
+        int integer_part = (int)temperature;  // Extract integer part
+        int fractional_part = (int)((temperature - integer_part) * 100);  // Extract fractional part (two decimal places)
+        // Construct the string manually
+        char temp_str[16];
+        snprintf(temp_str, sizeof(temp_str), "%d.%02d", integer_part, fractional_part);
+        LOG_DBG("%s C", temp_str);  // Log the string
+        k_sleep(K_SECONDS(4));
+    }
 }
 
 /* Creating subcommands (level 1 command) array for command "mcp9808". */
