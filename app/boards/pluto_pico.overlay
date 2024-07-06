@@ -49,7 +49,7 @@
         compatible = "microchip,mcp9808";
         reg = <0x19>;
     };
-    mcp9808_2: mcp9808_2@1A {
+    mcp9808_2: mcp9808_2@1a {
         compatible = "microchip,mcp9808";
         reg = <0x1a>;
     };
