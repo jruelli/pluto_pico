@@ -77,7 +77,7 @@ uint32_t get_is_proxy_state_by_name(const char* name);
 struct vl53l0x vl53l0x_sensors[NUM_SENSORS] = {
         {"p_0", 100, VL53L0X_MODE_OFF, false},
         {"p_1", 100, VL53L0X_MODE_OFF, false},
-        {"p_2", 100, VL53L0X_MODE_DISTANCE, false},
+        {"p_2", 100, VL53L0X_MODE_OFF, false},
         {"p_3", 100, VL53L0X_MODE_OFF, false}
 };
 
@@ -461,7 +461,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_proxy,
                                SHELL_CMD(get-mode, NULL,
                                          "Get conf for sensor <name>.",
                                          cmd_proxy_get_mode),
-                               SHELL_CMD(set-mode, NULL,
+                               SHELL_CMD(config-mode, NULL,
                                          "Configure sensor <name> to distance (d) ,proximity measurement (p) "
                                          "or off (off) <[d||p||off]>.",
                                          cmd_proxy_set_mode),
