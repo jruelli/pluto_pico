@@ -54,7 +54,7 @@ void user_led_init(void) {
 _Noreturn void user_led_thread(void) {
     while (1) {
         gpio_pin_toggle_dt(&led);
-        k_sleep(K_MSEC(PLUTO_LED_THREAD_SLEEP_TIME_MS));
+        k_sleep(K_SECONDS(PLUTO_LED_THREAD_SLEEP_TIME_S));
         LOG_DBG("Toggling user LED");
     }
 }

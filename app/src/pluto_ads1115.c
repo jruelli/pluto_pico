@@ -7,6 +7,7 @@
 #include "inc/pluto_ads1115.h"
 #include "inc/ads1115.h"
 #include "inc/pluto_motordriver.h"
+#include "inc/pluto_config.h"
 
 LOG_MODULE_REGISTER(pluto_ads1115, LOG_LEVEL_WRN);
 
@@ -58,14 +59,15 @@ void ads1115_thread(void) {
                 double_to_string(input, vol_str, sizeof(vol_str));
                 LOG_WRN("Threshold exceeded for input %d: %s V", i, vol_str);
                 motordriver_stop_motors();
-                k_sleep(K_SECONDS(10));
+                k_sleep(K_SECONDS(PLUTO_ADS1115_THRESH_SLEEP_TIME_S));
             }
         }
-        k_sleep(K_SECONDS(5));
+        k_sleep(K_SECONDS(PLUTO_ADS1115_THREAD_SLEEP_TIME_S));
     }
 }
 
-K_THREAD_DEFINE(ads1115_thread_id, 1024, ads1115_thread, NULL, NULL, NULL, 7, 0, 0);
+K_THREAD_DEFINE(ads1115_thread_id, PLUTO_ADS1115_THREAD_STACK_SIZE, ads1115_thread, NULL, NULL, NULL,
+                PLUTO_ADS1115_THREAD_PRIORITY, 0, 0);
 
 static int cmd_ads1115_list_inputs(const struct shell *shell, size_t argc, char **argv) {
     for (int i = 0; i < PLUTO_MCP9808_NUM_SENSORS; i++) {

@@ -7,6 +7,7 @@
 
 #include "inc/pluto_mcp9808.h"
 #include "inc/pluto_motordriver.h"
+#include "inc/pluto_config.h"
 
 LOG_MODULE_REGISTER(pluto_mcp9808, LOG_LEVEL_WRN);
 
@@ -50,14 +51,15 @@ void mcp9808_thread(void) {
                 double_to_string(sensors[i].temperature, temp_str, sizeof(temp_str));
                 LOG_WRN("Threshold exceeded for sensor %d: %s C", i, temp_str);
                 motordriver_stop_motors();
-                k_sleep(K_SECONDS(10));
+                k_sleep(K_SECONDS(PLUTO_MCP9808_THRESH_SLEEP_TIME_S));
             }
         }
-        k_sleep(K_SECONDS(5));
+        k_sleep(K_SECONDS(PLUTO_MCP9808_THREAD_SLEEP_TIME_S));
     }
 }
 
-K_THREAD_DEFINE(mcp9808_thread_id, 1024, mcp9808_thread, NULL, NULL, NULL, 7, 0, 0);
+K_THREAD_DEFINE(mcp9808_thread_id, PLUTO_MCP9808_THREAD_STACK_SIZE, mcp9808_thread, NULL, NULL, NULL,
+                PLUTO_MCP9808_THREAD_PRIORITY, 0, 0);
 
 static int cmd_mcp9808_list_sensors(const struct shell *shell, size_t argc, char **argv) {
     for (int i = 0; i < PLUTO_MCP9808_NUM_SENSORS; i++) {

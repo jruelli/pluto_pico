@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include "inc/pluto_neodriver.h"
+#include "inc/pluto_config.h"
 
 
 LOG_MODULE_REGISTER(pluto_neodriver, LOG_LEVEL_WRN);
@@ -23,6 +24,7 @@ LOG_MODULE_REGISTER(pluto_neodriver, LOG_LEVEL_WRN);
 
 static struct pluto_neodriver driver;
 static uint16_t max_led_index = 120;
+static uint8_t animation_mode = 0;
 
 int neodriver_init(void) {
     driver.i2c_dev = DEVICE_DT_GET(DT_BUS(NEODRIVER_NODE));
@@ -59,6 +61,7 @@ int neodriver_set_color(uint16_t led_index, uint8_t red, uint8_t green, uint8_t 
 }
 
 int neodriver_set_all_colors(uint8_t red, uint8_t green, uint8_t blue) {
+    animation_mode = 0; // Reset animation mode to 0
     for (uint16_t i = 0; i < max_led_index; i++) {
         int ret = neodriver_set_color(i, red, green, blue);
         if (ret) {
@@ -71,6 +74,52 @@ int neodriver_set_all_colors(uint8_t red, uint8_t green, uint8_t blue) {
 int neodriver_show(void) {
     uint8_t cmd = SEESAW_NEOPIXEL_SHOW;
     return i2c_write(driver.i2c_dev, &cmd, 1, driver.i2c_addr);
+}
+
+void running_light_animation(void) {
+    for (uint16_t i = 0; i < max_led_index; i++) {
+        neodriver_set_all_colors(0, 0, 0); // Clear all LEDs
+        neodriver_set_color(i, 255, 0, 0); // Set current LED to red
+        neodriver_show();
+        k_msleep(PLUTO_NEOPIXEL_THREAD_SLEEP_TIME_MS); // Delay for smooth animation
+    }
+}
+
+_Noreturn void neodriver_thread(void) {
+    while (1) {
+        if (animation_mode == 1) {
+            running_light_animation();
+        }
+        k_msleep(PLUTO_NEOPIXEL_THREAD_SLEEP_TIME_MS);
+    }
+}
+
+/* Define the Neodriver thread */
+K_THREAD_DEFINE(neodriver_thread_id, PLUTO_NEOPIXEL_THREAD_STACK_SIZE, neodriver_thread, NULL, NULL, NULL,
+                PLUTO_NEOPIXEL_THREAD_PRIORITY, 0, 0);
+
+int cmd_neodriver_set_mode(const struct shell *shell, size_t argc, char **argv) {
+    if (argc != 2) {
+        shell_error(shell, "Usage: set-animation-mode <0|1>");
+        return -EINVAL;
+    }
+    uint8_t mode = atoi(argv[1]);
+    if (mode > 1) {
+        shell_error(shell, "Invalid mode. Must be 0 or 1.");
+        return -EINVAL;
+    }
+    animation_mode = mode;
+    shell_print(shell, "%d", animation_mode);
+    return 0;
+}
+
+int cmd_neodriver_get_mode(const struct shell *shell, size_t argc, char **argv) {
+    if (argc != 1) {
+        shell_error(shell, "Usage: get-animation-mode");
+        return -EINVAL;
+    }
+    shell_print(shell, "%d", animation_mode);
+    return 0;
 }
 
 int cmd_neodriver_config_led_index(const struct shell *shell, size_t argc, char **argv) {
@@ -104,6 +153,8 @@ int cmd_neodriver_update_one_color(const struct shell *shell, size_t argc, char 
         return ret;
     }
     LOG_DBG("Setting one led");
+    // Reset animation mode to 0
+    animation_mode = 0;
     ret = neodriver_set_color(index, red, green, blue);
     if (ret) {
         shell_error(shell, "Failed to set colors for LED %d", index);
@@ -151,7 +202,11 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_neodriver,
                                              cmd_neodriver_update_one_color, 5, 0),
                                SHELL_CMD_ARG(set-all-colors, NULL, "Update the colors of all LEDs <r> <g> <b>.",
                                              cmd_neodriver_update_all_colors, 4, 0),
+                               SHELL_CMD_ARG(set-animation-mode, NULL, "Set the animation mode <0|1>.",
+                                             cmd_neodriver_set_mode, 2, 0),
+                               SHELL_CMD_ARG(get-animation-mode, NULL, "Get the animation mode.",
+                                             cmd_neodriver_get_mode, 1, 0),
                                SHELL_SUBCMD_SET_END
 );
 
-SHELL_CMD_REGISTER(pluto_neodriver, &sub_neodriver, "Neodriver commands", NULL);
+SHELL_CMD_REGISTER(neodriver, &sub_neodriver, "Neodriver commands", NULL);
