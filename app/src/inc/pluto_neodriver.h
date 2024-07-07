@@ -17,7 +17,7 @@
 /*=========================================================================
     STRUCTURES
     -----------------------------------------------------------------------*/
-struct neodriver {
+struct pluto_neodriver {
     const struct device *i2c_dev;
     uint8_t i2c_addr;
 };

@@ -1,17 +1,27 @@
-#include "inc/neodriver.h"
+/*
+ * Copyright (c) Jannis Ruellmann 2024
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include <zephyr/logging/log.h>
+#include <zephyr/devicetree_generated.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/i2c.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/shell/shell.h>
 #include <stdlib.h>
 
-LOG_MODULE_REGISTER(neodriver, LOG_LEVEL_WRN);
+#include "inc/pluto_neodriver.h"
+
+
+LOG_MODULE_REGISTER(pluto_neodriver, LOG_LEVEL_WRN);
 
 #define NEODRIVER_NODE DT_NODELABEL(neodriver)
 #define NEODRIVER_I2C_ADDR DT_REG_ADDR(NEODRIVER_NODE)
 #define NEOPIXEL_PIN 15
 
-static struct neodriver driver;
+static struct pluto_neodriver driver;
 static uint16_t max_led_index = 120;
 
 int neodriver_init(void) {
@@ -32,9 +42,6 @@ int neodriver_init(void) {
         return ret;
     }
     neodriver_set_all_colors(0,0,0);
-    neodriver_set_color(0, 255, 0, 0); // Set LED 0 to red
-    neodriver_set_color(1, 0, 255, 0); // Set LED 1 to green
-    neodriver_set_color(2, 0, 0, 255); // Set LED 2 to blue
     // Update the strip
     neodriver_show();
     return 0;
@@ -66,7 +73,6 @@ int neodriver_show(void) {
     return i2c_write(driver.i2c_dev, &cmd, 1, driver.i2c_addr);
 }
 
-/* Shell command to set the maximum LED index */
 int cmd_neodriver_config_led_index(const struct shell *shell, size_t argc, char **argv) {
     if (argc != 2) {
         shell_error(shell, "Usage: set-max-led-index <value>");
@@ -148,4 +154,4 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_neodriver,
                                SHELL_SUBCMD_SET_END
 );
 
-SHELL_CMD_REGISTER(neodriver, &sub_neodriver, "Neodriver commands", NULL);
+SHELL_CMD_REGISTER(pluto_neodriver, &sub_neodriver, "Neodriver commands", NULL);

@@ -37,7 +37,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "inc/motordriver.h"
+#include "inc/pluto_motordriver.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(motordriver, LOG_LEVEL_WRN);

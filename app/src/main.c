@@ -24,13 +24,13 @@
 
 #include "inc/usb_cli.h"
 #include "inc/user_led.h"
-#include "inc/relays.h"
-#include "inc/motordriver.h"
-#include "inc/vl53l0x.h"
-#include "inc/emergency_button.h"
+#include "inc/pluto_relays.h"
+#include "inc/pluto_motordriver.h"
+#include "inc/pluto_vl53l0x.h"
+#include "inc/pluto_em_button.h"
 #include "inc/pluto_mcp9808.h"
 #include "inc/pluto_ads1115.h"
-#include "inc/neodriver.h"
+#include "inc/pluto_neodriver.h"
 
 /**
  * @brief Entry point for the Pluto_pico application.

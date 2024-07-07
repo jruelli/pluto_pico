@@ -39,7 +39,6 @@ void user_led_init(void) {
     if (!gpio_is_ready_dt(&led)) {
         return;
     }
-
     gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
     LOG_INF("Starting LED thread");
     k_tid_t led_tid = k_thread_create(&user_led_thread_data, user_led_stack_area,

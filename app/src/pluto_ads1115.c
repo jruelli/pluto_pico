@@ -6,7 +6,7 @@
 
 #include "inc/pluto_ads1115.h"
 #include "inc/ads1115.h"
-#include "inc/motordriver.h"
+#include "inc/pluto_motordriver.h"
 
 LOG_MODULE_REGISTER(pluto_ads1115, LOG_LEVEL_WRN);
 

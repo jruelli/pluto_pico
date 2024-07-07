@@ -35,11 +35,11 @@
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/shell/shell.h>
-#include "inc/vl53l0x.h"
+#include "inc/pluto_vl53l0x.h"
 #include "vl53l0x_types.h"
 #include "vl53l0x_api.h"
 #include "inc/usb_cli.h"
-#include "inc/motordriver.h"
+#include "inc/pluto_motordriver.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_WRN);

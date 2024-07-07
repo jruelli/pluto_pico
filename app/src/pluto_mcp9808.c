@@ -6,7 +6,7 @@
 #include <zephyr/drivers/sensor.h>
 
 #include "inc/pluto_mcp9808.h"
-#include "inc/motordriver.h"
+#include "inc/pluto_motordriver.h"
 
 LOG_MODULE_REGISTER(pluto_mcp9808, LOG_LEVEL_WRN);
 
