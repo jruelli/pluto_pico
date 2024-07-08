@@ -40,6 +40,7 @@
 #include "vl53l0x_api.h"
 #include "inc/usb_cli.h"
 #include "inc/pluto_motordriver.h"
+#include "inc/pluto_config.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_WRN);
@@ -386,7 +387,6 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             if (vl53l0x_sensors[i].mode == VL53L0X_MODE_ERROR) {
                 continue;
             }
-            k_sleep(K_MSEC(10));
             ret = sensor_sample_fetch(vl53l0x);
             if (ret) {
                 vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
@@ -415,7 +415,7 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
                 continue;
             }
             if (vl53l0x_sensors[i].distance_mm < vl53l0x_sensors[i].threshold) {
-                LOG_WRN("measured distance under defined threshold.");
+                LOG_INF("measured distance under defined threshold.");
                 vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
                 vl53l0x_sensors[i].is_proxy = true;
                 motordriver_stop_motors();
@@ -423,7 +423,7 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
                 vl53l0x_sensors[i].is_proxy = false;
             }
         }
-        k_sleep(K_MSEC(100));
+        k_sleep(K_MSEC(PLUTO_VL53L0X_THREAD_SLEEP_TIME_MS));
     }
 }
 
