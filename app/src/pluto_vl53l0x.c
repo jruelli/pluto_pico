@@ -362,10 +362,7 @@ uint32_t get_is_proxy_state_by_name(const char* name) {
  */
 void sensor_thread(void *unused1, void *unused2, void *unused3) {
     int ret;
-
     while (1) {
-        k_sleep(SENSOR_POLL_INTERVAL);
-
         // Iterate through each sensor
         for (int i = 0; i < ARRAY_SIZE(vl53l0x_sensors); i++) {
             const struct device *vl53l0x;
@@ -389,14 +386,7 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             if (vl53l0x_sensors[i].mode == VL53L0X_MODE_ERROR) {
                 continue;
             }
-            if (vl53l0x_sensors[i].is_ready_checked == false) {
-                if (!device_is_ready(vl53l0x)) {
-                    LOG_ERR("sensor: device %s not ready.", vl53l0x_sensors[i].name);
-                    continue;
-                } else {
-                    vl53l0x_sensors[i].is_ready_checked = true;
-                }
-            }
+            k_sleep(K_MSEC(10));
             ret = sensor_sample_fetch(vl53l0x);
             if (ret) {
                 vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
@@ -433,6 +423,7 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
                 vl53l0x_sensors[i].is_proxy = false;
             }
         }
+        k_sleep(K_MSEC(100));
     }
 }
 
