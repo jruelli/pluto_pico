@@ -57,7 +57,7 @@ void ads1115_thread(void) {
                 // Perform special action
                 char vol_str[16];
                 double_to_string(input, vol_str, sizeof(vol_str));
-                LOG_WRN("Threshold exceeded for input %d: %s V", i, vol_str);
+                LOG_INF("Threshold exceeded for input %d: %s V", i, vol_str);
                 motordriver_stop_motors();
                 k_sleep(K_SECONDS(PLUTO_ADS1115_THRESH_SLEEP_TIME_S));
             }

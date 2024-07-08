@@ -49,7 +49,7 @@ void mcp9808_thread(void) {
             if (sensors[i].threshold_enabled && sensors[i].temperature > sensors[i].threshold) {
                 char temp_str[16];
                 double_to_string(sensors[i].temperature, temp_str, sizeof(temp_str));
-                LOG_WRN("Threshold exceeded for sensor %d: %s C", i, temp_str);
+                LOG_INF("Threshold exceeded for sensor %d: %s C", i, temp_str);
                 motordriver_stop_motors();
                 k_sleep(K_SECONDS(PLUTO_MCP9808_THRESH_SLEEP_TIME_S));
             }
