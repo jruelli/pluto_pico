@@ -310,10 +310,10 @@ void set_motors(motor_t *m1, motor_t *m2, uint32_t speed1, uint32_t speed2, bool
     // Brake both motors to zero speed non-blocking if direction change is needed
     bool needToStopM1 = (m1->direction != dir1);
     bool needToStopM2 = (m2->direction != dir2);
-    if (needToStopM1) {
+    if (needToStopM1 || speed1 == 0) {
         motordriver_adjust_motor_speed_non_blocking(m1, 0);
     }
-    if (needToStopM2) {
+    if (needToStopM2 || speed2 == 0) {
         motordriver_adjust_motor_speed_non_blocking(m2, 0);
     }
     // Monitor the speed of both motors if needed
