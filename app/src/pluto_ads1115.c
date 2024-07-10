@@ -92,7 +92,7 @@ static int cmd_ads1115_get_input(const struct shell *shell, size_t argc, char **
     }
     char vol_str[16];
     double_to_string(inputs[input_index].voltage, vol_str, sizeof(vol_str));
-    shell_print(shell, "%d: %s V", input_index, vol_str);
+    shell_print(shell, "%d: %s", input_index, vol_str);
     return 0;
 }
 
