@@ -43,27 +43,32 @@ int neodriver_init(void) {
         LOG_ERR("Failed to set Neopixel pin");
         return ret;
     }
-    neodriver_set_all_colors(0,0,0);
+    neodriver_set_all_colors(0,0,0, 0);
     // Update the strip
     neodriver_show();
     return 0;
 }
 
-int neodriver_set_color(uint16_t led_index, uint8_t red, uint8_t green, uint8_t blue) {
-    uint8_t buf[6];
+int neodriver_set_color(uint16_t led_index, uint8_t red, uint8_t green, uint8_t blue, uint8_t white) {
+    uint8_t buf[7];
     buf[0] = SEESAW_NEOPIXEL_BUF;
     buf[1] = (led_index >> 8) & 0xFF;
     buf[2] = led_index & 0xFF;
     buf[3] = red;
     buf[4] = green;
     buf[5] = blue;
-    return i2c_write(driver.i2c_dev, buf, sizeof(buf), driver.i2c_addr);
+    buf[6] = white;
+    int ret = i2c_write(driver.i2c_dev, buf, sizeof(buf), driver.i2c_addr);
+    if (ret) {
+        LOG_ERR("Failed to set Neopixel color");
+    }
+    return ret;
 }
 
-int neodriver_set_all_colors(uint8_t red, uint8_t green, uint8_t blue) {
+int neodriver_set_all_colors(uint8_t red, uint8_t green, uint8_t blue, uint8_t white) {
     animation_mode = 0; // Reset animation mode to 0
     for (uint16_t i = 0; i < max_led_index; i++) {
-        int ret = neodriver_set_color(i, red, green, blue);
+        int ret = neodriver_set_color(i, red, green, blue, white);
         if (ret) {
             return ret;
         }
@@ -78,8 +83,8 @@ int neodriver_show(void) {
 
 void running_light_animation(void) {
     for (uint16_t i = 0; i < max_led_index; i++) {
-        neodriver_set_all_colors(0, 0, 0); // Clear all LEDs
-        neodriver_set_color(i, 255, 0, 0); // Set current LED to red
+        neodriver_set_all_colors(0, 0, 0, 0); // Clear all LEDs
+        neodriver_set_color(i, 255, 0, 0, 0); // Set current LED to red
         neodriver_show();
         k_msleep(PLUTO_NEOPIXEL_THREAD_SLEEP_TIME_MS); // Delay for smooth animation
     }
@@ -139,14 +144,15 @@ int cmd_neodriver_config_led_index(const struct shell *shell, size_t argc, char 
 }
 
 int cmd_neodriver_update_one_color(const struct shell *shell, size_t argc, char **argv) {
-    if (argc != 5) {
-        shell_error(shell, "Usage: set-one-color <index> <red> <green> <blue>");
+    if (argc != 6) {
+        shell_error(shell, "Usage: set-one-color <index> <red> <green> <blue> <white>");
         return -EINVAL;
     }
     uint8_t index = atoi(argv[1]);
     uint8_t red = atoi(argv[2]);
     uint8_t green = atoi(argv[3]);
     uint8_t blue = atoi(argv[4]);
+    uint8_t white = atoi(argv[5]);
     int ret = -1;
     if (index > max_led_index) {
         shell_error(shell, "given index greater than max_led_index");
@@ -155,7 +161,7 @@ int cmd_neodriver_update_one_color(const struct shell *shell, size_t argc, char 
     LOG_DBG("Setting one led");
     // Reset animation mode to 0
     animation_mode = 0;
-    ret = neodriver_set_color(index, red, green, blue);
+    ret = neodriver_set_color(index, red, green, blue, white);
     if (ret) {
         shell_error(shell, "Failed to set colors for LED %d", index);
         return ret;
@@ -166,20 +172,21 @@ int cmd_neodriver_update_one_color(const struct shell *shell, size_t argc, char 
         return ret;
     }
     LOG_DBG("Done setting one led");
-    shell_print(shell, "LED %d updated to color (%d, %d, %d)", index, red, green, blue);
+    shell_print(shell, "LED %d updated to color (%d, %d, %d, %d)", index, red, green, blue, white);
     return 0;
 }
 
 int cmd_neodriver_update_all_colors(const struct shell *shell, size_t argc, char **argv) {
-    if (argc != 4) {
-        shell_error(shell, "Usage: set-all-colors <red> <green> <blue>");
+    if (argc != 5) {
+        shell_error(shell, "Usage: set-all-colors <red> <green> <blue> <white>");
         return -EINVAL;
     }
     uint8_t red = atoi(argv[1]);
     uint8_t green = atoi(argv[2]);
     uint8_t blue = atoi(argv[3]);
+    uint8_t white = atoi(argv[4]);
     LOG_DBG("Setting all led");
-    int ret = neodriver_set_all_colors(red, green, blue);
+    int ret = neodriver_set_all_colors(red, green, blue, white);
     if (ret) {
         shell_error(shell, "Failed to set colors for all LEDs");
         return ret;
@@ -190,18 +197,19 @@ int cmd_neodriver_update_all_colors(const struct shell *shell, size_t argc, char
         return ret;
     }
     LOG_DBG("Done setting all led");
-    shell_print(shell, "All LEDs updated to color (%d, %d, %d)", red, green, blue);
+    shell_print(shell, "All LEDs updated to color (%d, %d, %d, %d)", red, green, blue, white);
     return 0;
 }
 
 /* Shell commands */
+/* Shell commands */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_neodriver,
                                SHELL_CMD_ARG(config-led-index, NULL, "Set the maximum LED index to <index>.",
                                              cmd_neodriver_config_led_index, 2, 0),
-                               SHELL_CMD_ARG(set-one-color, NULL, "Update the colors of one LED <index> <r> <g> <b>.",
-                                             cmd_neodriver_update_one_color, 5, 0),
-                               SHELL_CMD_ARG(set-all-colors, NULL, "Update the colors of all LEDs <r> <g> <b>.",
-                                             cmd_neodriver_update_all_colors, 4, 0),
+                               SHELL_CMD_ARG(set-one-color, NULL, "Update the colors of one LED <index> <r> <g> <b> <w>.",
+                                             cmd_neodriver_update_one_color, 6, 0),
+                               SHELL_CMD_ARG(set-all-colors, NULL, "Update the colors of all LEDs <r> <g> <b> <w>.",
+                                             cmd_neodriver_update_all_colors, 5, 0),
                                SHELL_CMD_ARG(set-animation-mode, NULL, "Set the animation mode <0|1>.",
                                              cmd_neodriver_set_mode, 2, 0),
                                SHELL_CMD_ARG(get-animation-mode, NULL, "Get the animation mode.",
