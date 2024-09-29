@@ -55,9 +55,9 @@ int main(void) {
     /* Init motordriver */
     motordriver_init();
     /* Init vl53l0x*/
-    // vl53l0x_init();
+    vl53l0x_init();
     /* Init emrgency_button */
-    // emergency_button_init();
+    emergency_button_init();
     /* Init mcp9808 temperature sensors */
     //mcp9808_pluto_init();
     return 0;
