@@ -3,41 +3,19 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-/**
- * @file motor1_cmd.c
- * @brief Functions for motor1 command
- *
- * This module provides a set of functions for controlling and querying the state
- * of motor1 via the pico-shell.
- *
- * @author Jannis Ruellmann
- */
 
 #include <sys/cdefs.h>
-#include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/pwm.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/device.h>
 #include <zephyr/logging/log.h>
 
-#include "inc/motordriver.h"
+#include "inc/pluto_motordriver.h"
 #include "inc/usb_cli.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(motor1_cmds, LOG_LEVEL_WRN);
 
-/**
- * @brief Root command function for motor1.
- *
- * This function is called if a wrong subcommand has been selected.
- * This is a root command (level 0 command).
- *
- * @param shell Pointer to the shell structure.
- * @param argc Number of arguments.
- * @param argv Array of arguments.
- * @return Returns 0 on success, or an error code on failure.
- */
 static int cmd_motor1(const struct shell *shell, size_t argc, char **argv) {
     shell_error(shell, "Invalid subcommand or number of arguments.");
     return 0;
@@ -158,8 +136,6 @@ static int cmd_motor1_config_brak_rate_delay(const struct shell *shell, size_t a
 void cmd_motor1_init() {
     LOG_INF("Adding motor1 commands.");
 }
-
-
 
 /* Creating subcommands (level 1 command) array for command "motor1". */
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_motor1,

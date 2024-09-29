@@ -3,41 +3,19 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-/**
- * @file motor2_cmd.c
- * @brief Functions for motor2 command
- *
- * This module provides a set of functions for controlling and querying the state
- * of motor2 via the pico-shell.
- *
- * @author Jannis Ruellmann
- */
 
 #include <sys/cdefs.h>
-#include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/pwm.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/device.h>
 #include <zephyr/logging/log.h>
 
-#include "inc/motordriver.h"
+#include "inc/pluto_motordriver.h"
 #include "inc/usb_cli.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(motor2_cmds, LOG_LEVEL_WRN);
 
-/**
- * @brief Root command function for motor2.
- *
- * This function is called if a wrong subcommand has been selected.
- * This is a root command (level 0 command).
- *
- * @param shell Pointer to the shell structure.
- * @param argc Number of arguments.
- * @param argv Array of arguments.
- * @return Returns 0 on success, or an error code on failure.
- */
 static int cmd_motor2(const struct shell *shell, size_t argc, char **argv) {
     shell_error(shell, "Invalid subcommand or number of arguments.");
     return 0;

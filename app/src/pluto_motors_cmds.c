@@ -21,23 +21,12 @@
 #include <zephyr/logging/log.h>
 
 
-#include "inc/motordriver.h"
+#include "inc/pluto_motordriver.h"
 #include "inc/usb_cli.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(motors_cmds, LOG_LEVEL_WRN);
 
-/**
- * @brief Root command function for motor2.
- *
- * This function is called if a wrong subcommand has been selected.
- * This is a root command (level 0 command).
- *
- * @param shell Pointer to the shell structure.
- * @param argc Number of arguments.
- * @param argv Array of arguments.
- * @return Returns 0 on success, or an error code on failure.
- */
 static int cmd_motors(const struct shell *shell, size_t argc, char **argv) {
     shell_error(shell, "Invalid subcommand or number of arguments.");
     return 0;

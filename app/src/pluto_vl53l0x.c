@@ -35,11 +35,12 @@
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/shell/shell.h>
-#include "inc/vl53l0x.h"
+#include "inc/pluto_vl53l0x.h"
 #include "vl53l0x_types.h"
 #include "vl53l0x_api.h"
 #include "inc/usb_cli.h"
-#include "inc/motordriver.h"
+#include "inc/pluto_motordriver.h"
+#include "inc/pluto_config.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
 LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_WRN);
@@ -48,7 +49,7 @@ LOG_MODULE_REGISTER(vl53l0x, LOG_LEVEL_WRN);
 #define VL53L0X_CHIP_ID                         0xEEAA
 
 #define SENSOR_POLL_INTERVAL K_MSEC(1000)
-#define NUM_SENSORS 4
+#define PLUTO_VL53L0X_NUM_SENSORS 4
 
 static struct k_thread vl53l0x_thread_data;
 K_THREAD_STACK_DEFINE(vl53l0x_stack_area, 1024u);
@@ -74,7 +75,7 @@ const char* get_proxy_name(int proxy_number);
 uint32_t get_is_proxy_state_by_name(const char* name);
 
 // Define configurations and data for each sensor
-struct vl53l0x vl53l0x_sensors[NUM_SENSORS] = {
+struct vl53l0x vl53l0x_sensors[PLUTO_VL53L0X_NUM_SENSORS] = {
         {"p_0", 100, VL53L0X_MODE_OFF, false},
         {"p_1", 100, VL53L0X_MODE_OFF, false},
         {"p_2", 100, VL53L0X_MODE_OFF, false},
@@ -362,10 +363,7 @@ uint32_t get_is_proxy_state_by_name(const char* name) {
  */
 void sensor_thread(void *unused1, void *unused2, void *unused3) {
     int ret;
-
     while (1) {
-        k_sleep(SENSOR_POLL_INTERVAL);
-
         // Iterate through each sensor
         for (int i = 0; i < ARRAY_SIZE(vl53l0x_sensors); i++) {
             const struct device *vl53l0x;
@@ -388,14 +386,6 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
             }
             if (vl53l0x_sensors[i].mode == VL53L0X_MODE_ERROR) {
                 continue;
-            }
-            if (vl53l0x_sensors[i].is_ready_checked == false) {
-                if (!device_is_ready(vl53l0x)) {
-                    LOG_ERR("sensor: device %s not ready.", vl53l0x_sensors[i].name);
-                    continue;
-                } else {
-                    vl53l0x_sensors[i].is_ready_checked = true;
-                }
             }
             ret = sensor_sample_fetch(vl53l0x);
             if (ret) {
@@ -425,7 +415,7 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
                 continue;
             }
             if (vl53l0x_sensors[i].distance_mm < vl53l0x_sensors[i].threshold) {
-                LOG_WRN("measured distance under defined threshold.");
+                LOG_INF("measured distance under defined threshold.");
                 vl53l0x_sensors[i].mode = VL53L0X_MODE_ERROR;
                 vl53l0x_sensors[i].is_proxy = true;
                 motordriver_stop_motors();
@@ -433,6 +423,7 @@ void sensor_thread(void *unused1, void *unused2, void *unused3) {
                 vl53l0x_sensors[i].is_proxy = false;
             }
         }
+        k_sleep(K_MSEC(PLUTO_VL53L0X_THREAD_SLEEP_TIME_MS));
     }
 }
 
