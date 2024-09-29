@@ -16,6 +16,6 @@
 #define APP_MCP9808_H
 
 // Function declarations
-void mcp9808_init();
+void mcp9808_pluto_init();
 
 #endif //APP_MCP9808_H

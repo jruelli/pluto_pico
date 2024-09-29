@@ -172,7 +172,7 @@ static int cmd_mcp9808_list_sensors(const struct shell *shell, size_t argc, char
  * of the program to prepare the relay hardware for operation.
  *
  */
-void mcp9808_init() {
+void mcp9808_pluto_init() {
     LOG_INF("Initializing mcp9808 module");
 }
 

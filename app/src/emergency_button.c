@@ -99,7 +99,7 @@ static int cmd_em_button(const struct shell *shell, size_t argc, char **argv) {
 static int cmd_em_button_get_state(const struct shell *shell, size_t argc, char **argv) {
     if (argc == 1) {
         bool state = get_em_button_by_name("em_0");
-        shell_print(shell, "em_0 state: %d", state);
+        shell_print(shell, "%s", state ? "OK": "ERROR");
     } else {
         shell_error(shell, "Invalid number of arguments for subcommand");
     }

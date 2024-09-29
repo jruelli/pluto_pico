@@ -41,18 +41,18 @@
     status = "okay";
     pinctrl-names = "default";
     clock-frequency = <100000>;
-    mcp9808_0: mcp9808_0@18 {
-        compatible = "microchip,mcp9808";
-        reg = <0x18>;
-    };
-    mcp9808_1: mcp9808_1@19 {
-        compatible = "microchip,mcp9808";
-        reg = <0x19>;
-    };
-    mcp9808_2: mcp9808_2@1A {
-        compatible = "microchip,mcp9808";
-        reg = <0x1a>;
-    };
+    //mcp9808_0: mcp9808_0@18 {
+    //    compatible = "microchip,mcp9808";
+    //    reg = <0x18>;
+    //};
+    //mcp9808_1: mcp9808_1@19 {
+    //    compatible = "microchip,mcp9808";
+    //    reg = <0x19>;
+    //};
+    //mcp9808_2: mcp9808_2@1A {
+    //    compatible = "microchip,mcp9808";
+    //    reg = <0x1a>;
+    //};
     vl53l0x_0: vl53l0x_0@54 {
         compatible = "st,vl53l0x";
         reg = <0x54>;
