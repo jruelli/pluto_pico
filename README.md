@@ -23,31 +23,9 @@ cd pluto-pico-workspace
 west update
 ```
 
-### Building and running the bootloader
-pluto_pico requires MCUBoot as a first stage bootloader.
-In order to have the bootloader run the following command from the workspace path:
-
-```shell
-cd pluto_pico.git/scripts/mcuboot
-python copy_conf_to_mcuboot.py
-```
-
-To build the bootloader for the rpi_pico board, run the following command from the workspace path:
-
-```shell
-cd bootloader/mcuboot/boot/zephyr
-west build -b rpi_pico -p auto
-```
-
-Once you have built the bootloader, run the following command to flash it:
-
-```shell
-west flash
-```
-
 ### Building and running the main application
 
-To build the application for the pico_kunbus board, run the following command from the workspace path:
+To build the application for the pluto_pico board, run the following command from the workspace path:
 
 ```shell
 cd pluto_pico.git
@@ -58,12 +36,4 @@ Once you have built the application, run the following command to flash it:
 
 ```shell
 west flash
-```
-
-### Testing
-
-To execute Twister integration tests, run the following command:
-
-```shell
-west twister -T tests --integration
 ```

@@ -28,9 +28,6 @@
 #include "inc/pluto_motordriver.h"
 #include "inc/pluto_vl53l0x.h"
 #include "inc/pluto_em_button.h"
-#include "inc/pluto_mcp9808.h"
-#include "inc/pluto_ads1115.h"
-#include "inc/pluto_neodriver.h"
 
 /**
  * @brief Entry point for the Pluto_pico application.
@@ -58,13 +55,9 @@ int main(void) {
     motordriver_init();
     /* Init vl53l0x*/
     vl53l0x_init();
-    /* Init emergency_button */
+    /* Init emrgency_button */
     emergency_button_init();
     /* Init mcp9808 temperature sensors */
-    pluto_mcp9808_init();
-    /* Init ads1115 adc */
-    pluto_ads1115_init();
-    /* Init neodriver module */
-    neodriver_init();
+    //mcp9808_pluto_init();
     return 0;
 }

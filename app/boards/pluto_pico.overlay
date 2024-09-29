@@ -40,44 +40,32 @@
     pinctrl-0 = <&my_i2c0_pinctrl>;
     status = "okay";
     pinctrl-names = "default";
-    clock-frequency = <400000>;
+    clock-frequency = <100000>;
     ads1115: ads1115@48 {
         compatible = "ti,ads1115";
         #io-channel-cells = <1>;
         reg = <0x48 >;
         label = "ADS1115";
     };
-    mcp9808_0: mcp9808_0@18 {
-        compatible = "microchip,mcp9808";
-        reg = <0x18>;
-    };
-    mcp9808_1: mcp9808_1@19 {
-        compatible = "microchip,mcp9808";
-        reg = <0x19>;
-    };
-    mcp9808_2: mcp9808_2@1a {
-        compatible = "microchip,mcp9808";
-        reg = <0x1a>;
-    };
     vl53l0x_0: vl53l0x_0@54 {
         compatible = "st,vl53l0x";
         reg = <0x54>;
-        xshut-gpios = <&gpio0 0 GPIO_ACTIVE_LOW>;
+        xshut-gpios = <&gpio0 20 GPIO_ACTIVE_LOW>; // GPIO1 of vl53l0x_0
     };
     vl53l0x_1: vl53l0x_1@64 {
         compatible = "st,vl53l0x";
         reg = <0x64>;
-        xshut-gpios = <&gpio0 21 GPIO_ACTIVE_LOW>;
+        xshut-gpios = <&gpio0 28 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
     };
     vl53l0x_2: vl53l0x_2@56 {
         compatible = "st,vl53l0x";
         reg = <0x56>;
-        xshut-gpios = <&gpio0 18 GPIO_ACTIVE_LOW>;
+        xshut-gpios = <&gpio0 18 GPIO_ACTIVE_LOW>; // GPIO1 of vl53l0x_2
     };
     vl53l0x_3: vl53l0x_3@68 {
         compatible = "st,vl53l0x";
         reg = <0x68>;
-        xshut-gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;
+        xshut-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
     };
     neodriver: neodriver@60 {
         compatible = "adafruit,neodriver";
