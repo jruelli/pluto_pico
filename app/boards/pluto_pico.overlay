@@ -41,6 +41,12 @@
     status = "okay";
     pinctrl-names = "default";
     clock-frequency = <100000>;
+    ads1115: ads1115@48 {
+        compatible = "ti,ads1115";
+        #io-channel-cells = <1>;
+        reg = <0x48 >;
+        label = "ADS1115";
+    };
     vl53l0x_0: vl53l0x_0@54 {
         compatible = "st,vl53l0x";
         reg = <0x54>;
@@ -60,6 +66,11 @@
         compatible = "st,vl53l0x";
         reg = <0x68>;
         xshut-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>; // GPIO pin for sensor power control
+    };
+    neodriver: neodriver@60 {
+        compatible = "adafruit,neodriver";
+        reg = <0x60>;
+        label = "NEODRIVER";
     };
 };
 
