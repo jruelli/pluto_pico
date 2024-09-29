@@ -2,8 +2,8 @@
 // Created by Jannis on 02.02.2024.
 //
 
-#ifndef APP_VL53L0X_H
-#define APP_VL53L0X_H
+#ifndef APP_PLUTO_VL53L0X_H
+#define APP_PLUTO_VL53L0X_H
 
 enum sensor_mode {
     VL53L0X_MODE_DISTANCE,
@@ -14,4 +14,4 @@ enum sensor_mode {
 // Function declarations
 void vl53l0x_init(void);
 
-#endif //APP_VL53L0X_H
+#endif //APP_PLUTO_VL53L0X_H

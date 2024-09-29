@@ -12,8 +12,8 @@
  * @author Jannis Ruellmann
  */
 
-#ifndef APP_RELAYS_H
-#define APP_RELAYS_H
+#ifndef APP_PLUTO_RELAYS_H
+#define APP_PLUTO_RELAYS_H
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
@@ -32,4 +32,4 @@
 // Function declarations
 void relay_init();
 
-#endif // APP_RELAYS_H
+#endif // APP_PLUTO_RELAYS_H

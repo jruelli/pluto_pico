@@ -12,18 +12,20 @@
  * @author Jannis Ruellmann
  */
 
-#ifndef APP_MCP9808_H
-#define APP_MCP9808_H
+#ifndef APP_PLUTO_ADS1115_H
+#define APP_PLUTO_ADS1115_H
 
-struct mcp9808_sensor {
-    const struct device *dev;
+#include <stdio.h>
+
+struct ads1115_input {
+    const char *name;
     bool enabled;
-    double temperature;
+    double voltage;
     bool threshold_enabled;
     double threshold;
 };
 
 // Function declarations
-void mcp9808_pluto_init();
+void pluto_ads1115_init();
 
-#endif //APP_MCP9808_H
+#endif //APP_PLUTO_ADS1115_H

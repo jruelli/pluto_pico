@@ -41,30 +41,6 @@
 LOG_MODULE_REGISTER(usb_cli, LOG_LEVEL_WRN);
 
 /**
- * @brief Echo a message.
- *
- * This command echoes the provided message back to the shell. It is used to
- * demonstrate basic input and output functionality of the shell over USB.
- *
- * **Usage**\n
- *     echo &lt;message&gt; // Echoes the provided message\n
- *
- * @param shell Pointer to the shell structure.
- * @param argc Number of arguments.
- * @param argv Array of arguments; argv[1] is the message to echo.
- * @return Returns 0 on successful execution, or an error code on failure.
- */
-static int cmd_echo(const struct shell *sh, size_t argc, char **argv) {
-    // No additional arguments empty message
-    if (argc > 1) {
-        shell_print(sh, "%s", argv[1]);
-    } else {
-        shell_print(sh, "Usage: echo <message>");
-    }
-    return 0;
-}
-
-/**
  * @brief Display version.
  *
  * This command outputs the application's version. This function is useful for
@@ -216,9 +192,6 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_version,
                                          cmd_version_build_ver),
                                SHELL_SUBCMD_SET_END
 );
-
-/* Creating root (level 0) command "echo" */
-SHELL_CMD_REGISTER(echo, NULL, "echo <message> back", cmd_echo);
 
 /* Creating root (level 0) command "version" */
 SHELL_CMD_REGISTER(version, &sub_version, "App version", cmd_version);

@@ -38,7 +38,7 @@
 #include <zephyr/logging/log.h>
 #include <string.h>
 
-#include "inc/relays.h"
+#include "inc/pluto_relays.h"
 #include "inc/usb_cli.h"
 
 /* Enable logging for module. Change Log Level for debugging. */
